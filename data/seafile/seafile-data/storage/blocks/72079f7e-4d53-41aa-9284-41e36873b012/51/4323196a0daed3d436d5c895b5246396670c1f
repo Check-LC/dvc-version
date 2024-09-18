@@ -1,0 +1,156 @@
+## 1. Redis 集群模式介绍
+
+*   Cluster 模式是 Redis3.0 开始推出的
+*   Redis Cluster 属于 AP 模型
+*   采用无中心结构，每个节点保存数据和整个集群状态, 每个节点都和其他所有节点连接
+*   官方要求：至少 6 个节点才可以保证高可用，即 3 主 3 从；扩展性强、更好做到高可用
+*   各个节点会互相通信，采用 gossip 协议交换节点元数据信息
+*   数据分散存储到各个节点上
+
+## 2. 集群和哨兵的区别
+
+Sentinel 哨兵：是为系统提供高可用特性,每一个 Redis 节点数据是同步的,且每一个 Redis 节点保存的都是**全量数据**
+
+Cluster 集群：是将整体数据打散到多台 Redis 服务器,可对存储规模进行水平扩容,每一个 Redis 节点存储的都是完整数据的一部分
+
+## 3. Redis 集群的哈希槽设计
+
+Redis 集群预分好 16384 个槽，当需要在 Redis 集群中放置一个 key-value 时，根据 CRC16(key) mod 16384 的值，决定将一个 key 放到哪个桶中
+
+假设主节点的数量为 3，将 16384 个槽位按照【用户自己的规则】去分配这 3 个节点，每个节点复制一部分槽位
+
+*   节点 1 的槽位区间范围为 0-5460
+*   节点 2 的槽位区间范围为 5461-10922
+*   节点 3 的槽位区间范围为 10923-16383
+
+注意：从节点是没有槽位的，只有主节点才有
+
+**存储查找：**
+
+对要存储查找的键进行 crc16 哈希运算,得到一个值，并取模 16384，判断这个值在哪个节点的范围区间
+
+使用哈希槽的好处就在于可以方便的添加或移除节点。
+
+*   当需要增加节点时，只需要把其他节点的某些哈希槽挪到新节点就可以了；
+*   当需要移除节点时，只需要把移除节点上的哈希槽挪到其他节点就行了;
+
+**为什么是 16384（2^14）个？**
+
+在 redis 节点发送心跳包时需要把所有的槽放到这个心跳包里，以便让节点知道当前集群信息，16384=16k，在发送心跳包时使用 char 进行 bitmap 压缩后是 2k（2 \* 8 (8 bit) \*1024(1k) = 16K），也就是说使用 2k 的空间创建了16k 的槽数。
+
+虽然使用 CRC16 算法最多可以分配 65535（2^16-1）个槽位，65535=65k，压缩后就是 8k（8 \* 8 (8 bit) \* 1024(1k) =65K），也就是说需要需要 8k 的心跳包，作者认为这样做不太值得；并且一般情况下一个 redis 集群不会有超过 1000 个 master 节点，所以 16k 的槽位是个比较合适的选择。
+
+**哈希槽的特点：**
+
+当你往 Redis Cluster 中加入一个 Key 时，会根据 crc16(key) mod 16384 计算这个 key 应该分布到哪个 hash slot 中，一个 hash slot 中会有很多 key 和 value。你可以理解成表的分区，使用单节点时的 redis 时只有一个表，所有的 key 都放在这个表里；改用 RedisCluster 以后会自动为你生成 16384 个分区表，你 insert 数据时会根据上面的简单算法来决定你的 key 应该存在哪个分区，每个分区里有很多 key。
+
+## 4. Redis 3 主 3 从集群搭建
+
+部署架构图：
+
+**Precondition**: 在当前环境下使用三台机器，各自分别暴露两个，配置模拟为 3 主 3 从的 6 节点，尽量匹配生产环境架构。
+
+[ ![image-20221017222803528](assets/1709280970-bacc17bceb40339e7bd99b1803687250.png)]( http://www.fblinux.com/wp-content/uploads/2022/10/image-20221017222803528.png )
+
+1、redis 服务安装（3 个节点都要）
+
+```bash
+yum install -y gcc-c++ autoconf automake
+cd /usr/local/
+wget http://download.redis.io/redis-stable.tar.gz
+tar xvzf redis-stable.tar.gz
+cd redis-stable
+make
+echo "redis installed"
+```
+
+2、每个节点添加如下 6379 和 6380 配置文件
+
+6379 实例配置：
+
+```bash
+# cat redis-cluster-6379.conf
+bind 0.0.0.0
+port 6379
+daemonize yes
+requirepass "123456"
+logfile "./cluster-6379.log"
+dbfilename "cluster-6379.rdb"
+dir "./"
+masterauth "123456"
+#是否开启集群
+cluster-enabled yes
+# 生成的node文件，记录集群节点信息，默认为nodes.conf
+cluster-config-file nodes-6379.conf
+#节点连接超时时间
+cluster-node-timeout 20000
+#集群节点映射端口
+cluster-announce-port 6379
+#集群节点总线端口,节点之间互相通信，常规端口+1万
+cluster-announce-bus-port 16379
+```
+
+6380 实例配置：
+
+```bash
+# cat redis-cluster-6380.conf
+bind 0.0.0.0
+port 6380
+daemonize yes
+requirepass "123456"
+logfile "./cluster-6380.log"
+dbfilename "cluster-6380.rdb"
+dir "./"
+masterauth "123456"
+#是否开启集群
+cluster-enabled yes
+# 生成的node文件，记录集群节点信息，默认为nodes.conf
+cluster-config-file nodes-6380.conf
+#节点连接超时时间
+cluster-node-timeout 20000
+#集群节点映射端口
+cluster-announce-port 6380
+#集群节点总线端口,节点之间互相通信，常规端口+1万
+cluster-announce-bus-port 16380
+```
+
+3、启动服务
+
+|     |     |
+| --- | --- |
+| 1<br><br>2 | `.``/src/redis-server` `redis-cluster-6379.conf` <br><br> `.``/src/redis-server` `redis-cluster-6380.conf` |
+
+4、构建集群
+
+只需要在任意一个节点执行如下命令，就可以把刚才创建的 6 个 redis 实例联系在一起
+
+|     |     |
+| --- | --- |
+| 1   | `.``/src/redis-cli` `-a 123456 --cluster create 172.16.247.3:6379 172.16.247.3:6380 172.16.247.4:6379 172.16.247.4:6380 172.16.247.5:6379 172.16.247.5:6380 --cluster-replicas 1` |
+
+–cluster-replicas：表示要为主节点分配的从节点数量
+
+```bash
+>>> Performing hash slots allocation on 6 nodes...
+Master[0] -> Slots 0 - 5460
+Master[1] -> Slots 5461 - 10922
+Master[2] -> Slots 10923 - 16383
+Adding replica 172.16.247.4:6380 to 172.16.247.3:6379
+Adding replica 172.16.247.5:6380 to 172.16.247.4:6379
+Adding replica 172.16.247.3:6380 to 172.16.247.5:6379
+M: 309189a42fb9319507a8596849e433a06f27544d 172.16.247.3:6379
+   slots:[0-5460] (5461 slots) master
+S: b6d900ca23212bd7dd117289c4f8548422b71f9b 172.16.247.3:6380
+   replicates b4574bcd7f713a989821a3e6592d5a033178f580
+M: a81f3478de9679484eca701cfdef12749974a7af 172.16.247.4:6379
+   slots:[5461-10922] (5462 slots) master
+S: 5e0b9dbf137ca2170b4cd164c860b4f60bce8bd5 172.16.247.4:6380
+   replicates 309189a42fb9319507a8596849e433a06f27544d
+M: b4574bcd7f713a989821a3e6592d5a033178f580 172.16.247.5:6379
+   slots:[10923-16383] (5461 slots) master
+S: 5d90efb37d8c916e77d503ab2c76ab3e58be5558 172.16.247.5:6380
+   replicates a81f3478de9679484eca701cfdef12749974a7af
+Can I set the above configuration? (type 'yes' to accept): yes
+```
+
+上面是执行完创建集群命令之后生成的信息，要是可以接收这个配置就敲 yes 确认，然后 redis 就会自己完成集群的搭建工作。

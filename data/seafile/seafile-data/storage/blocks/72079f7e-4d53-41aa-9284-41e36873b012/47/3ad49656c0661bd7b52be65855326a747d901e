@@ -1,0 +1,251 @@
+{
+  "main": {
+    "id": "088a0aac608624e9",
+    "type": "split",
+    "children": [
+      {
+        "id": "cfa61690687b45ce",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "89a1cae2d7896d4f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "18_Observability/18_01_Metrics/18_01_03_Kube/4.Nextcloud.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "3d172fcba3a0e6c3",
+            "type": "leaf",
+            "state": {
+              "type": "excalidraw",
+              "state": {
+                "file": "Excalidraw/Drawing 2024-09-09 18.04.04.excalidraw.md"
+              }
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9a670fd3907e6fe9",
+    "type": "split",
+    "children": [
+      {
+        "id": "86c2e56558260d0c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "caaa2dfdca7406a8",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "4b9261b99f038079",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": true,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "byModifiedTime"
+              }
+            }
+          },
+          {
+            "id": "dd4fa75ca7967328",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          },
+          {
+            "id": "44c1a95ac95af0d4",
+            "type": "leaf",
+            "state": {
+              "type": "recent-files",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 294.5
+  },
+  "right": {
+    "id": "430dd076ad16ccda",
+    "type": "split",
+    "children": [
+      {
+        "id": "d325c819be3e451a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8dde2fcdcd829869",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Excalidraw/Drawing 2024-09-09 18.04.04.excalidraw.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "41568a7c0af25a7b",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Excalidraw/Drawing 2024-09-09 18.04.04.excalidraw.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "64f0b748b7cc3850",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": false
+              }
+            }
+          },
+          {
+            "id": "cfc21c14ab61c955",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Excalidraw/Drawing 2024-09-09 18.04.04.excalidraw.md"
+              }
+            }
+          },
+          {
+            "id": "6f9c752c5934e698",
+            "type": "leaf",
+            "state": {
+              "type": "quiet-outline",
+              "state": {}
+            }
+          },
+          {
+            "id": "ec920c3afe0ee304",
+            "type": "leaf",
+            "state": {
+              "type": "smart-gantt",
+              "state": {}
+            }
+          },
+          {
+            "id": "18b6b60e5f14dc99",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              }
+            }
+          }
+        ],
+        "currentTab": 3
+      }
+    ],
+    "direction": "horizontal",
+    "width": 350.5,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "command-palette:打开命令面板": false,
+      "media-extended:Open media": false,
+      "oz-clear-unused-images:Clear Unused Images": false,
+      "obsidian-excalidraw-plugin:新建绘图文件": false,
+      "markdown-table-editor:Open Markdown Table Editor": false
+    }
+  },
+  "active": "3d172fcba3a0e6c3",
+  "lastOpenFiles": [
+    "18_Observability/18_01_Metrics/18_01_03_Kube/4.Nextcloud.md",
+    "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_04_rancher/assets/1713432781-461da7eecac39f0e3c45ca71071b0e4c.png",
+    "18_Observability/18_06_Tracing/1.jaeger.md",
+    "18_Observability/18_06_Tracing/2.signoz.md",
+    "18_Observability/18_03_Logging/18_03_01_Loki/1.Helm Deploy loki.md",
+    "18_Observability/18_01_Metrics/18_01_03_Kube/1.authentik.md",
+    "18_Observability/18_01_Metrics/18_01_02_VM/4.Kafka_exporter.md",
+    "18_Observability/18_01_Metrics/18_01_02_VM/0.Docker-compose 测试.md",
+    "18_Observability/18_01_Metrics/18_01_02_VM/1.bind_exporter.md",
+    "19_BookExcerpt/1.四千周.md",
+    "17_Dev/1.Python poetry.md",
+    "18_Observability/1.云原生可观测性（Observability）.md",
+    "18_Observability/4.一些疑问.md",
+    "Webclip/clip/kubernetes-adm-HA-example/index.md",
+    "17_Dev/3.terraform-README.md",
+    "17_Dev/2.Py基础.md",
+    "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_05_vault/1.index.md",
+    "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_04_rancher/1.index.md",
+    "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_03_minio/1.index.md",
+    "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_02_harbor/1.index.md",
+    "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_01_flink/1.index.md",
+    "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_06_wikijs/1.index.md",
+    "12_Authorization/12_02_Authentik/2.添加 LDAP Source.md",
+    "12_Authorization/12_02_Authentik/1.install.md",
+    "Trash/05_03_Prom HA/1.Thanos.md",
+    "06_OperationSystem/2.server 批量安装（未书写完成）.md",
+    "07_Hardware/2.MLNX 100G网卡驱动安装.md",
+    "00_BasicResources/attachments/Pasted image 20240711120528.png",
+    "08_VectorDatabase/08_01_MIlvus",
+    "未命名",
+    "未命名.canvas",
+    "Trash/05_03_Prom HA/attachments/1712828415-32cd6b5719fb0fbfcb6878263f8bc9f6.png",
+    "Trash/05_03_Prom HA/attachments/1712828415-ec0c2f5d697e0e743d7da89686b13773.avif",
+    "Trash/05_03_Prom HA/attachments/1712828415-f1c0f13dac5751c2b6c49294b5b1620c.png",
+    "Trash/05_03_Prom HA/attachments/1712828415-d0b8d912147b1cff36b42b05c1a79b7a.avif",
+    "Trash/05_03_Prom HA/attachments/1712828415-aeff54f709cb0c15ffee93c14b09b90b.png",
+    "Trash/05_03_Prom HA/attachments/1712828415-555556fb1c34de45bfa45cb324de7ce2.avif",
+    "Trash/05_03_Prom HA/attachments/1712828415-6597d40d536745151672cdf6a239b17a.webp",
+    "Trash/05_03_Prom HA/attachments/1712828415-999c8ae9ba3eaa4a4dfcafb64feb9c25.webp",
+    "Markwhen/Markwhen 9-11-2024 14.47.05.mw.mw",
+    "Markwhen/Markwhen 9-11-2024 15.56.26.mw",
+    "Markwhen/Markwhen 9-11-2024 14.48.16.mw",
+    "Markwhen",
+    "Excalidraw",
+    "attachments",
+    "18_Observability/18_05_OTEL/attachments",
+    "18_Observability/18_05_OTEL"
+  ]
+}

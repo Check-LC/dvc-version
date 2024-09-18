@@ -1,0 +1,23 @@
+## 1. Vs Code 环境
+在 Desktop 下载使用 Visual Studio Code，插件市场中查找 Remote - SSH
+![](attachments/vscode-pulgin.png)
+## 2. 插件配置
+### 2.1 新建远程连接
+![](attachments/vscode-pulgin-01.png)
+### 2.2 输入目标机器登录信息
+远程开发环境是由容器运行，连接时需要指定端口，来自上方 `https://instantbox.ibswufe.com` 创建后的页面提示。示例命令如下：
+`ssh -p 32217 inboc@10.8.0.88` 
+![](attachments/vscode-remote-01.png)
+### 2.3 保存登录信息在默认文件即可
+添加成功后，将会在右下角有弹窗，点击 connect，输入密码，此账户密码为默认密码。
+等待远端下载连接服务的有关文件，连接成功后在左下角会显示远端机器地址。
+![](attachments/vscode-remote-02.png)
+### 2.4 修改密码
+此机器使用的 `inboc` 用户是该开发机器本地用户，通过终端命令进行修改密码。
+`sudo passwd inboc` 执行命令，在交互中输入自定义的密码即可。注意：输入密码不会回显，输入后需要再次确认输入内容，回车确认生效，请妥善保存密码。
+## 3. 开发
+选择资源管理器打开工作路径，在目录下新建文件并书写代码。
+打开后，可在屏幕左侧看见系统文件的目录树，选择并点击右键即可对此文件或文件夹进行编辑。
+![](attachments/vscode-remote-03.png)
+如有需要，选择菜单栏终端，新建终端，执行终端命令。
+![](attachments/vscode-remote-04.png)

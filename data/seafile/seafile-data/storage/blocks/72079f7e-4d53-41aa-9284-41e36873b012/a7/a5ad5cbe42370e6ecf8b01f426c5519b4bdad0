@@ -1,0 +1,71 @@
+## 1. Download kafka 
+```bash
+wget https://downloads.apache.org/kafka/3.6.0/kafka_2.13-3.6.0.tgz
+mkdir /usr/local/kafka
+tar xvf ./kafka_2.13-3.6.0.tgz  -C /usr/local/kafka/ --strip-component=1
+```
+## 2. configuration
+>config/kraft/server.properties 主要修改内容
+>```bash
+node.id=  
+log.dirs=
+advertised.listeners=PLAINTEXT://server3:9092        # 对外的连接
+controller.quorum.voters=3@server3:9093,2@server2:9093,1@server1:9093    # 选举的连接
+>```
+## 3. init
+```bash
+bin/kafka-storage.sh random-uuid                             # generate a clusterid only once
+	u1my-viGQgacuD7BjlsRLA
+bin/kafka-storage.sh format -t u1my-viGQgacuD7BjlsRLA -c config/kraft/server.properties     # formatting logfile on each host, could delete the logdir and then reformat
+	Formatting /var/log/kafka/kraft-combined-logs with metadata.version 3.6-IV2.
+```
+
+
+## 4. systemd management
+```
+[Unit]
+Description=Apache Kafka Server
+Documentation=http://kafka.apache.org/documentation.html
+ 
+[Service]
+Type=simple
+ExecStart=/usr/local/kafka/bin/kafka-server-start.sh /usr/local/kafka/config/kraft/server.properties
+ExecStop=/usr/local/kafka/bin/kafka-server-stop.sh
+Restart=on-abnormal
+ 
+[Install]
+WantedBy=multi-user.target
+```
+<pre>
+systemctl daemon-reload
+systemctl enable --now kafka
+</pre>
+## 5. part of the explaintions of Kraft configs
+| 配置项 | 说明 |
+| :--: | :--: |
+| advertised.listeners | 服务器向客户端宣告的监听器名称、主机名controller.listener.names控制器使用的监听器名称列表 |
+| node.id | 与此实例关联的节点 ID。 |
+| listeners | 服务器监听的地址，格式为 `listener_name://host_name:port` |
+| inter.broker.listener.name | 用于 broker 之间通信的监听器名称。 |
+| listener.security.protocol.map | 监听器名称到安全协议的映射。默认情况下，它们是相同的。 |
+| num.network.threads | 服务器用于从网络接收请求和向网络发送响应的线程数 |
+| num.io.threads | 服务器用于处理请求（可能包括磁盘 I/O）的线程数 |
+| socket.send.buffer.bytes | 服务器用于发送数据的缓冲区大小 |
+| socket.receive.buffer.bytes | 服务器用于接收数据的缓冲区大小 |
+| socket.request.max.bytes | 服务器接受的请求的最大大小（用于防止内存溢出） |
+| log.dirs | 用于存储日志文件的目录列表 |
+| num.partitions | 每个主题的默认日志分区数 |
+| num.recovery.threads.per.data.dir | 每个数据目录在启动时用于日志恢复和关闭时用于刷新的线程数 |
+| offsets.topic.replication.factor | 内部主题 "__consumer_offsets" 和 "__transaction_state" 的复制因子 |
+| transaction.state.log.replication.factor | 事务状态日志的复制因子 |
+| transaction.state.log.min.isr | 事务状态日志的最小同步副本数 |
+| log.flush.interval.messages | 强制将数据刷新到磁盘之前接受的消息数 |
+| log.flush.interval.ms | 消息在日志中停留的最大时间，超过这个时间就会强制刷新到磁盘 |
+| log.retention.hours | 由于年龄而使日志文件有资格被删除的最小年龄 |
+| log.retention.bytes | 基于大小的日志保留策略 |
+| log.segment.bytes | 日志段文件的最大大小 |
+| log.retention.check.interval.ms | 检查日志段是否可以根据保留策略被删除的间隔 |
+
+## 6. metrics
+
+  

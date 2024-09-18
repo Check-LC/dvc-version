@@ -1,0 +1,30 @@
+{
+  "editor:set-heading-0": [
+    {
+      "modifiers": [
+        "Mod"
+      ],
+      "key": "0"
+    }
+  ],
+  "workspace:goto-tab-1": [],
+  "workspace:goto-tab-2": [],
+  "workspace:goto-tab-3": [],
+  "workspace:goto-tab-4": [],
+  "workspace:goto-tab-5": [],
+  "workspace:goto-tab-6": [],
+  "editing-toolbar:header0-text": [],
+  "editor:open-link-in-new-window": [],
+  "cmdr:macro-0": [
+    {
+      "modifiers": [],
+      "key": "F3"
+    }
+  ],
+  "cmdr:macro-1": [
+    {
+      "modifiers": [],
+      "key": "F4"
+    }
+  ]
+}

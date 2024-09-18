@@ -1,0 +1,90 @@
+## 1 . 查看 apt 已经安装的 nginx
+`nginx -V` 查看 prefix 参数、查看版本
+## 2 . 下载 nginx、 vts 源码包到一个工作目录
+```bash
+sudo apt install g++ gcc libpcre3 libpcre3-dev zlib1g-dev openssl libssl-dev make
+wget http://nginx.org/download/nginx-1.18.0.tar.gz
+wget https://github.com/vozlt/nginx-module-vts/archive/refs/tags/v0.2.2.tar.gz
+```
+## 3 . 在 nginx 解压目录编译
+```bash
+./configure --with-compat --prefix=/usr/share/nginx --add-dynamic-module=../nginx-module-vts
+make 
+sudo cp objs/ngx_http_vhost_traffic_status_module.so  /usr/lib/nginx/modules
+```
+## 4 . 配置 nginx 
+```bash
+# /etc/nginx/nginx.conf
+load_module modules/ngx_http_vhost_traffic_status_module.so;
+
+http {
+    vhost_traffic_status_filter_by_host on;
+    vhost_traffic_status_zone;
+    vhost_traffic_status_filter on;
+    vhost_traffic_status_filter_by_set_key $status $server_name;
+}
+```
+## 5. 配置暴露指标的 server 
+```bash
+# 示例
+server {
+    listen       5320;
+    server_name  localhost;
+ 
+    #access_log  /var/log/nginx/host.access.log  main;
+ 
+    location /status {
+        vhost_traffic_status_display;
+        vhost_traffic_status_display_format html;
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+    }
+}
+```
+
+此时
+- 访问 IP:5320/status/format/prometheus  得到 Prometheus 时序存储格式
+- 访问 IP:5320/status 得到 网页显示的监控数据
+- 还有 IP:5320/status/format/json
+```nginx TI:"Proxy Example"
+upstream instantbox {
+  server 10.8.0.90:8888;
+}
+
+server {
+  listen 80;
+  server_name box.inboc.top;
+
+  location / {
+    proxy_pass      http://instantbox;
+    proxy_redirect  off;
+    proxy_set_header   Host             $host:$server_port;
+    proxy_set_header   X-Real-IP        $remote_addr;
+    proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto "https";
+    proxy_connect_timeout      10;
+    proxy_send_timeout         10;
+    proxy_read_timeout         10;
+    proxy_buffer_size          128k;
+    proxy_buffers              32 32k;
+    proxy_busy_buffers_size    256k;
+    proxy_temp_file_write_size 256k;
+  }
+}
+```
+## 6 . conf.d\/\*.conf  
+  如果不期望被统计可以配置
+```php
+server {
+...
+vhost_traffic_status off;
+...
+}  
+```
+## 7 .  prometheus.yml 增加
+```yaml
+- job_name: 'nginx-vts'
+    static_configs:
+      - targets: ['10.8.0.89:5320']
+    metrics_path: '/status/format/prometheus'
+```

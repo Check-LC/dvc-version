@@ -1,0 +1,94 @@
+## 1. [Prerequisites](https://milvus.io/docs/prerequisite-helm.md)
+
+### 1.1 Hardware requirements
+|Component|Requirement|Recommendation|Note|
+|---|---|---|---|
+|CPU|- Intel 2nd Gen Core CPU or higher<br>- Apple Silicon|- Standalone: 4 core or more<br>- Cluster: 8 core or more||
+|CPU instruction set|- SSE4.2<br>- AVX<br>- AVX2<br>- AVX-512|- SSE4.2<br>- AVX<br>- AVX2<br>- AVX-512|Vector similarity search and index building within Milvus require CPU's support of single instruction, multiple data (SIMD) extension sets. Ensure that the CPU supports at least one of the SIMD extensions listed. See [CPUs with AVX](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions#CPUs_with_AVX) for more information.|
+|RAM|- Standalone: 8G<br>- Cluster: 32G|- Standalone: 16G<br>- Cluster: 128G|The size of RAM depends on the data volume.|
+|Hard drive|SATA 3.0 SSD or higher|NVMe SSD or higher|The size of hard drive depends on the data volume.|
+### 1.2 Software requirements
+|Operating system|Software|Note|
+|---|---|---|
+|Linux platforms|- Kubernetes 1.16 or later<br>- kubectl<br>- Helm 3.0.0 or later<br>- minikube (for Milvus standalone)<br>- Docker 19.03 or later (for Milvus standalone)|See [Helm Docs](https://helm.sh/docs/) for more information.|
+
+|Software|Version|Note|
+|---|---|---|
+|etcd|3.5.0|See [additional disk requirements](https://milvus.io/docs/prerequisite-helm.md#Additional-disk-requirements).|
+|MinIO|RELEASE.2023-03-20T20-16-18Z||
+|Pulsar|2.8.2|
+### 1.3 Additional disk requirements
+Disk performance is critical to etcd. It is highly recommended that you use local NVMe SSDs. Slower disk reponse may cause frequent cluster elections[选举] that will eventually degrade[降低、削弱] the etcd service.
+To test if your disk is qualified, use [fio](https://github.com/axboe/fio).
+```bash
+mkdir test-data
+fio --rw=write --ioengine=sync --fdatasync=1 --directory=test-data --size=2200m --bs=2300 --name=mytest
+```
+Ideally, your disk should reach over 500 IOPS and below 10ms for the 99th percentile fsync latency. Read the etcd [Docs](https://etcd.io/docs/v3.5/op-guide/hardware/#disks) for more detailed requirements.
+
+## 2. Install Helm Chart for Milvus
+
+- helm install milvus standalone
+> 1 etcd + 1 minio + 1milvus (默认使用`rocksmq` 作为消息队列--应该在此时的 milvus 镜像中，也可用 pulsar / kafka) 
+- milvus cluster
+- values.yaml
+```
+mixCoordinator:
+  enabled: true
+rootCoordinator:
+  enabled: false
+indexCoordinator:
+  enabled: false
+queryCoordinator:
+  enabled: false
+dataCoordinator:
+  enabled: false
+attu:
+  enabled: true
+  service:
+    type: NodePort
+# pulsar: 
+#   enabled: false
+# kafka:
+#   enabled: true
+pulsar:
+  bookkeeper:
+    resources:
+      requests:
+        memory: 1024Mi  # 资源限制应该是不用修改
+    replicaCount: 2     # 三个副本不能正常调度
+```
+- pulsar bookie 在部署中，3个 pod 只能成功启动两个; pod describe 输出为节点内存不足、cpu不足、其余节点有volume冲突。
+- 调整：资源限制1Gi，2副本。
+访问 attu ：NodePort:ip
+
+### 2.1 验证和测试
+- 目的：基本确定集群状态、确定各个组件的身份作用、查看配置文件、查看配置连接
+使用 mixcoord 时的 pod 组成：
+
+|database-milvus|storage|messaging and streaming|
+|:---:|:---:|:---:| 
+|mixcoord|minio|pulsar|
+|datanode|etcd|Pulsar [brokers](https://pulsar.apache.org/docs/3.1.x/deploy-bare-metal/#deploy-pulsar-brokers)|
+|indexnode||[BookKeeper](https://pulsar.apache.org/docs/3.1.x/deploy-bare-metal/#deploy-a-bookkeeper-cluster)|
+|querynode||[ZooKeeper](https://pulsar.apache.org/docs/3.1.x/deploy-bare-metal/#deploy-a-zookeeper-cluster) cluster (optional)|
+|proxy||proxy & recovery|
+
+```shell
+pip install milvus-cli
+milvus_cli   # 进入工具命令行测试链接和简单查询
+```
+## 3. 对比
+|容器|运行命令(编译后没有run-helm)|
+|:---:|:---:|
+|mixcoord|<div style="width: 700pt">        milvus run mixture -rootcoord -querycoord -datacoord -indexcoord    ;                /tini -- /milvus/tools/run-helm.sh milvus run mixture -rootcoord -querycoord -datacoord -indexcoord</div>|
+|querynode|  milvus run querynode   ;     /tini -- /milvus/tools/run-helm.sh milvus run querynode|
+|indexnode|milvus run indexnode  ; /tini -- /milvus/tools/run-helm.sh milvus run indexnode |
+|datanode|milvus run datanode  ;  /tini -- /milvus/tools/run-helm.sh milvus run datanode|
+|proxy|  milvus run proxy;   /tini -- /milvus/tools/run-helm.sh milvus run proxy|
+## Fault
+### 疑问1：驱逐 pod，不能成功
+>error: unable to drain node "worker5" due to error:cannot delete Pods with `local storage` (use --delete-emptydir-data to override): test/milvus-datanode-556cdb5986-bczdt, continuing command...
+  `cannot delete Pods with local storage` (use `--delete-emptydir-data` to override): test/milvus-datanode-556cdb5986-bczdt
+
+

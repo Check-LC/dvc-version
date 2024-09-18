@@ -1,0 +1,33 @@
+terraform {
+  required_providers {
+    rancher2 = {
+      source  = "rancher/rancher2"
+      version = "4.1.0"
+    }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "4.2.0"
+    }
+  }
+}
+
+provider "vault" {
+  address = "https://sys-vault.inboc.net"
+  token   = var.vault_token
+}
+
+data "vault_kv_secret_v2" "rancher_admin" {
+  mount = "terraformauto"
+  name  = "rancher_admin"
+}
+
+data "vault_kv_secret_v2" "test_ops_k8s" {
+  mount = "terraformauto"
+  name  = "test_ops_k8s"
+}
+
+provider "rancher2" {
+  api_url    = "https://rancher.inboc.top"
+  access_key = local.rancher2.access_key
+  secret_key = local.rancher2.secret_key
+}

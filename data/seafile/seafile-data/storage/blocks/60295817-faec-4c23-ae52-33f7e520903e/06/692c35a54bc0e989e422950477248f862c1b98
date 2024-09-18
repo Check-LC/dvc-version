@@ -1,0 +1,14 @@
+projects_info = {
+  "test-ops-system" = {
+    namespace = ["traefik", "external-secrets", "gpu-operator", "istio-ingress", "kiali-operator"]
+  },
+  "test-ops-app" = {
+    namespace = ["argo-cd", "argo-rollouts", "vault"]
+  },
+  "test-ops-kuberay-clusters" = {
+    namespace = ["kuberay-clusters"]
+    #     role_template_binding = {
+    #       "Long Chao" = "test-ops-kuberay-clusters-kuberay.inboc-rob-dev"
+    #     }
+  }
+}

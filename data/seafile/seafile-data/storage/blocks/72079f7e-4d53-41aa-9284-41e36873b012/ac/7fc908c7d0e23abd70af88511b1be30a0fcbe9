@@ -1,0 +1,18 @@
+## 1.  Latex-OCR
+```Bash
+docker run -itd -p 8501:8501 --entrypoint python lukasblecher/pix2tex:api pix2tex/api/run.py
+```
+## 效果
+<p>可以解析公式，不能识别较复杂的段落</p>
+
+<iframe src="https://github.com/lukas-blecher/LaTeX-OCR/blob/main/docs/installation.md#Docker" width=100% height="500px" frameborder="0" scrolling="auto"></iframe>
+
+## 2 .Latexlive
+### 目标
+<iframe src="https://www.latexlive.com/" width=100% height="500px" frameborder="0" scrolling="auto"></iframe>
+
+### 源码
+<iframe src="https://github.com/QianJianTech/LaTeXLive" width=100% height="500px" frameborder="0" scrolling="auto"></iframe>
+
+### 结果
+基于当前项目代码的部署，网站渲染不成功。

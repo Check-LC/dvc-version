@@ -1,0 +1,27 @@
+terraform {
+  required_providers {
+    authentik = {
+      source = "goauthentik/authentik"
+      version = "2024.4.0"
+    }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "4.2.0"
+    }
+  }
+}
+
+provider "vault" {
+  address = "https://sys-vault.inboc.net"
+  token   = var.vault_token
+}
+
+data "vault_kv_secret_v2" "ibswufe_authentik" {
+  mount = "terraformauto"
+  name  = "ibswufe_authentik"
+}
+
+provider "authentik" {
+  url   = "https://authentik.inboc.top"
+  token = local.authentik.token
+}

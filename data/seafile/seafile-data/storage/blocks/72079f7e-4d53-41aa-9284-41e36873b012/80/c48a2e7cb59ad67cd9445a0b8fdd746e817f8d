@@ -1,0 +1,23 @@
+## 1. 配置文件中启用 ServerMetrics.java
+   在配置文件中的模板是默认注释的。
+   在每个节点执行相同操作
+```cnf
+sudo tee -a /usr/local/zookeeper/conf/zoo.cfg << EOF
+metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider
+metricsProvider.httpHost=0.0.0.0
+metricsProvider.httpPort=7000
+metricsProvider.exportJvmInfo=true
+EOF
+```
+
+## 2.  prometheus.yml
+
+```
+  - job_name: 'zookeeper-metrics'
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+        - 10.8.0.88:7000
+        - 10.8.0.89:7000
+        - 10.8.0.90:7000
+```

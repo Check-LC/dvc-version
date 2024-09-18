@@ -1,0 +1,79 @@
+## 当前的使用场景和特性 ：
+ - 从 Secrets 存储引擎 (Vault) 拉取 Secret 然后存储到 Kubernetes 的指定 ns 下。
+	 - 资源 1作用：(cluster)SecretStore----联通 ESO 与 Vault
+	 - 资源 2 作用：(cluster)ExternalSecret----拉取目标 path 下的 Vault Secret，存储为目标 ns 下的 k8s Secret 资源
+
+- 将证书上传到 Vault 存储，并在其他集群中拉取使用，其间涉及 secret type 的转换：opaque <———>kubernetes.io/tls
+	- pushsecret
+
+意义： 所需要的 secret 将不会出现在 helm 文件或者 manifest 文件中，这些文件泄漏将不会引起事故。
+
+## Helm install ESO
+```
+helm repo add external-secrets https://charts.external-secrets.io 
+helm install external-secrets  external-secrets/external-secrets  -n external-secrets  --create-namespace
+```
+
+## Create Resources
+### ClusterSecretStore
+
+通过 root token 的 vault 连接(测试，vault 用户管理更待学习)
+```yaml
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: monitor-eso-loki-clustersecretstore
+spec:
+  provider:
+    vault:
+      server: "http://vault-internal.vault.svc.cluster.local:8200"
+      version: "v2"
+      path: "loki"
+      auth:
+        tokenSecretRef:
+          name: "eso-vault-secret"
+          namespace: "external-secrets"
+          key: "vault-token"
+```
+
+###  ExternalSecret
+```
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: monitor-eso-loki-s3-externalsecret
+spec:
+  refreshInterval: "12h"
+  secretStoreRef:
+    name: monitor-eso-loki-clustersecretstore
+    kind: ClusterSecretStore
+  data:
+    - secretKey: ACCESSID
+      remoteRef: 
+        key: /loki-s3
+        conversionStrategy: Unicode
+        decodingStrategy: None
+        metadataPolicy: None
+        property: ACCESSID
+    - secretKey: SECRETKEY
+      remoteRef: 
+        key: /loki-s3
+        conversionStrategy: Unicode
+        decodingStrategy: None
+        metadataPolicy: None
+        property: SECRETKEY
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: eso-loki-s3-secret
+    template:
+      type: Opaque
+      data:
+        ACCESSID: '{{ .ACCESSID }}'
+        SECRETKEY: '{{ .SECRETKEY }}'
+      engineVersion: v2
+      mergePolicy: Replace 
+```
+
+附图，便于理解以上配置和 vault 中的路径与值的对应关系：
+![](attachments/eso-loki-externalsecret.png.png)

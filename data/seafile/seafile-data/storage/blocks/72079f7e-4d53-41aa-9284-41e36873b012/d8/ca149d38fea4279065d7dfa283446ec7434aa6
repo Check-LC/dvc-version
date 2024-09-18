@@ -1,0 +1,13 @@
+## **1. 提交密码修改申请**
+ibswufe 所有的系统：confluence、gitlab、nextcloud、Harbor、rocketchat、bastillion 均使用域账号和密码进行登录，新用户拿到账号密码后的第一件事情就是修改域用户密码，使用浏览器打开网页 [https://password.ibswufe.com](https://password.ibswufe.com) 进行修改，如下图所示：
+![](attachments/p1.png) 
+## **2. 输入用户名**
+在当前界面输入个人用户名,例如：chao.long ，然后点击提交。此时系统将会向使用者的邮箱账户发送重置密码的链接。\
+邮箱账户是申请开通帐号时向管理员提交的邮箱账户;  英博智云同事将使用 inboc 下发公司账户( chao.long@inboc.net )。
+## **3. 接收邮件**
+前往账号绑定的邮箱，查收邮件，复制修改密码的链接,并在浏览器中打开，如下图所示：
+![|1800](attachments/p2.png)
+根据密码复杂度要求修改自己的账户密码并提交，如下图所示：
+![](attachments/p3.png)
+## 4. 账户使用
+密码修改成功后，即可使用该账号和密码登录 ibswufe 的其他系统。

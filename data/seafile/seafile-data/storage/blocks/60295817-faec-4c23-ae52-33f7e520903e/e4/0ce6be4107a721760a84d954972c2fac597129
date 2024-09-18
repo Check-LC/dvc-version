@@ -1,0 +1,32 @@
+role_templates_info = {
+  "test-ops-kuberay-clusters-kuberay.inboc-rob-dev" = {
+    context = "project"
+    rules = [
+      {
+        api_groups = ["ray.io"]
+        resources  = ["rayclusters"]
+        verbs      = ["create", "delete", "get", "list", "patch", "update", "watch"]
+      },
+      {
+        api_groups = [""]
+        resources  = ["secrets"]
+        verbs      = ["get", "list"]
+      },
+      {
+        api_groups = [""]
+        resources  = ["pods"]
+        verbs      = ["get", "list"]
+      }
+    ]
+  },
+  "argo-workflows-argowf.inboc-rob-dev" = {
+    context = "project"
+    rules = [
+      {
+        api_groups = ["argoproj.io"]
+        resources  = ["workflows"]
+        verbs      = ["create", "delete", "get", "list", "patch", "update", "watch"]
+      }
+    ]
+  }
+}

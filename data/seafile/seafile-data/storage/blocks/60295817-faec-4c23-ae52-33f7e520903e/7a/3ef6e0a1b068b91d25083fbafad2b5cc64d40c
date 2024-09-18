@@ -1,0 +1,29 @@
+resource "terraform_data" "nodes" {
+  triggers_replace = var.nodes
+  for_each = {
+    for item in flatten([
+      for group in var.nodes : [
+        for host in group.hosts : {
+          key   = host
+          host  = host
+          roles = group.roles
+        }
+      ]
+    ]) : item.key => item
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      host     = each.value.host
+      user     = var.ssh_user
+      password = var.ssh_password
+    }
+
+    inline = [
+      format("%s %s",
+        var.cluster_registration_token_node_command,
+        join(" ", formatlist("--%s", each.value.roles))
+      )
+    ]
+  }
+}

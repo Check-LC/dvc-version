@@ -1,0 +1,163 @@
+## Py 虚拟环境设计
+
+管理环境和包  
+虚拟环境管理：conda  
+包管理：poetry 不在顶层使用(在 conda venv 下仅用于包管理)  
+       pipe 作为 poetry 的特殊情况的补充  
+
+/ conda / venv + poetry(with no virtual management)(.toml  +  .lock) / poetry add /operations  
+
+
+## Python poetry
+
+```shell
+$ docker run -it repo.inboc.net/test/ubuntu:22.04-py3.10.12   /bin/bash
+
+(dev) (dev) inboc@bec6cfed1049:~/source$ cd /home/inboc/env/dev
+# 固定路径
+
+(dev) inboc@bec6cfed1049:~/env/dev$ vim pyproject.toml
+[tool.poetry]
+name = "dev"
+version = "1.0.0"
+description = ""
+authors = ["admin <admin@inboc.net>"]
+
+[tool.poetry.dependencies]
+python = "3.10.12"
+
+[[tool.poetry.source]]
+name = "inboc"
+url = "https://nexus.inboc.net/repository/pypi/simple"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+(dev) inboc@bec6cfed1049:~/env/dev$ ll
+total 16
+drwxr-xr-x 1 inboc inboc 4096 Jun 27 13:50 ./
+drwxr-xr-x 1 inboc inboc 4096 Jun 14 13:57 ../
+-rw-r--r-- 1 inboc inboc  326 Jun 27 13:50 pyproject.toml
+```
+
+安装依赖
+
+```shell
+(dev) inboc@bec6cfed1049:~/env/dev$ poetry add jupyterhub==4.1.5
+# == 指定版本
+
+Updating dependencies
+Resolving dependencies... Downloading https://nexus.inboc.net/repository/pypi/packages/rpds-py/0.18.1/rpds_py-0.18.1-cp310-cp310-macosx_10_12_x86_64.whl#sha256=d31dea506d718693b6b2cffc0Resolving dependencies... Downloading https://nexus.inboc.net/repository/pypi/packages/cryptography/42.0.8/cryptography-42.0.8-cp37-abi3-macosx_10_12_universal2.whl#sha256=81d8a52170578Resolving dependencies... Downloading https://nexus.inboc.net/repository/pypi/packages/greenlet/3.0.3/greenlet-3.0.3-cp310-cp310-macosx_11_0_universal2.whl#sha256=9da2bd29ed9e4f15955dd1Resolving dependencies... Downloading https://nexus.inboc.net/repository/pypi/packages/psutil/6.0.0/psutil-6.0.0-cp27-cp27m-macosx_10_9_x86_64.whl#sha256=a021da3e881cd935e64a3d0a20983bdResolving dependencies... Downloading https://nexus.inboc.net/repository/pypi/packages/pycparser/2.22/pycparser-2.22-py3-none-any.whl#sha256=c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc2Resolving dependencies... (37.1s)
+
+Package operations: 27 installs, 9 updates, 0 removals
+
+  - Installing attrs (23.2.0)
+  - Updating pycparser (2.22 /home/conda/feedstock_root/build_artifacts/pycparser_1711811537435/work -> 2.22)
+  - Installing rpds-py (0.18.1)
+  - Updating cffi (1.16.0 /home/conda/feedstock_root/build_artifacts/cffi_1696001684923/work -> 1.16.0)
+  - Installing referencing (0.35.1)
+  - Updating cryptography (42.0.8 /home/conda/feedstock_root/build_artifacts/cryptography-split_1717559422169/work -> 42.0.8)
+  - Installing greenlet (3.0.3)
+  - Installing jsonschema-specifications (2023.12.1)
+  - Installing markupsafe (2.1.5)
+  - Installing ruamel-yaml-clib (0.2.8)
+  - Installing typing-extensions (4.12.2)
+  - Updating certifi (2024.6.2 /home/conda/feedstock_root/build_artifacts/certifi_1718025014955/work/certifi -> 2024.6.2)
+  - Updating charset-normalizer (3.3.2 /home/conda/feedstock_root/build_artifacts/charset-normalizer_1698833585322/work -> 3.3.2)
+  - Updating idna (3.7 /home/conda/feedstock_root/build_artifacts/idna_1713279365350/work -> 3.7)
+  - Installing jsonschema (4.22.0)
+  - Installing mako (1.3.5)
+  - Installing pyopenssl (24.1.0)
+  - Installing python-json-logger (2.0.7)
+  - Installing ruamel-yaml (0.18.6)
+  - Installing six (1.16.0)
+  - Installing sqlalchemy (2.0.31)
+  - Installing traitlets (5.14.3)
+  - Updating urllib3 (2.2.1 /home/conda/feedstock_root/build_artifacts/urllib3_1708239446578/work -> 2.2.2)
+  - Installing alembic (1.13.1)
+  - Installing async-generator (1.10)
+  - Installing certipy (0.1.3)
+  - Installing jinja2 (3.1.4)
+  - Installing jupyter-telemetry (0.1.0)
+  - Installing oauthlib (3.2.2)
+  - Updating packaging (24.1 /home/conda/feedstock_root/build_artifacts/packaging_1718189413536/work -> 24.1)
+  - Installing pamela (1.1.0)
+  - Installing prometheus-client (0.20.0)
+  - Installing python-dateutil (2.9.0.post0)
+  - Updating requests (2.32.3 /home/conda/feedstock_root/build_artifacts/requests_1717057054362/work -> 2.32.3)
+  - Installing tornado (6.4.1)
+  - Installing jupyterhub (4.1.5)
+
+Writing lock file
+```
+
+
+
+```shell
+(dev) inboc@bec6cfed1049:~/env/dev$ ll
+total 120
+drwxr-xr-x 1 inboc inboc   4096 Jun 27 13:52 ./
+drwxr-xr-x 1 inboc inboc   4096 Jun 14 13:57 ../
+-rw-r--r-- 1 inboc inboc 105599 Jun 27 13:52 poetry.lock # 确保了项目依赖关系的确定性和可复现性
+-rw-r--r-- 1 inboc inboc    347 Jun 27 13:52 pyproject.toml 
+
+(dev) inboc@bec6cfed1049:~/env/dev$ cat pyproject.toml 
+[tool.poetry]
+name = "dev"
+version = "1.0.0"
+description = ""
+authors = ["admin <admin@inboc.net>"]
+
+[tool.poetry.dependencies]
+python = "3.10.12"
+jupyterhub = "4.1.5" ##
+
+[[tool.poetry.source]]
+name = "inboc"
+url = "https://nexus.inboc.net/repository/pypi/simple"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+```
+
+安装依赖后，安装的可执行文件
+
+```
+(dev) inboc@bec6cfed1049:~/env/dev$ jupyterhub
+jupyterhub             jupyterhub-singleuser  
+(dev) inboc@bec6cfed1049:~/env/dev$ jupyterhub-singleuser ls
+```
+
+命令用于将项目的依赖关系导出为不同格式的文件
+
+```shell
+(dev) inboc@bec6cfed1049:~/env/dev$  poetry export -f requirements.txt --output requirements.txt --without-hashes --all-extras
+Warning: poetry-plugin-export will not be installed by default in a future version of Poetry.
+In order to avoid a breaking change and make your automation forward-compatible, please install poetry-plugin-export explicitly. See https://python-poetry.org/docs/plugins/#using-plugins for details on how to install a plugin.
+To disable this warning run 'poetry config warnings.export false'.
+
+(dev) inboc@bec6cfed1049:~/env/dev$ ll
+total 124
+drwxr-xr-x 1 inboc inboc   4096 Jun 27 14:07 ./
+drwxr-xr-x 1 inboc inboc   4096 Jun 14 13:57 ../
+-rw-r--r-- 1 inboc inboc 105599 Jun 27 13:52 poetry.lock
+-rw-r--r-- 1 inboc inboc    347 Jun 27 13:52 pyproject.toml
+-rw-r--r-- 1 inboc inboc   2465 Jun 27 14:07 requirements.txt
+```
+
+
+
+conda 安装 poetry
+
+```
+conda install -c conda-forge poetry -y
+```
+
+poetry 禁用 虚拟环境管理
+
+```
+poetry config virtualenvs.create false
+```
+

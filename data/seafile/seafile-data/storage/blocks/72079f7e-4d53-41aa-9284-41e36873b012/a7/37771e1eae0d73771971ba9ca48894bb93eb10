@@ -1,0 +1,207 @@
+{
+  "recentFiles": [
+    {
+      "basename": "记录操作实现,以后多深究理论和原理",
+      "path": "记录操作实现,以后多深究理论和原理.md"
+    },
+    {
+      "basename": "3.mysql 使用案例问答",
+      "path": "01_Database/3.mysql 使用案例问答.md"
+    },
+    {
+      "basename": "1.Docker学习借鉴内容",
+      "path": "00_BasicResources/00_01_容器/1.Docker学习借鉴内容.md"
+    },
+    {
+      "basename": "Pasted image 20240711120528",
+      "path": "00_BasicResources/attachments/Pasted image 20240711120528.png"
+    },
+    {
+      "basename": "2.Tips",
+      "path": "00_BasicResources/2.Tips.md"
+    },
+    {
+      "basename": "1.clickhouse 集群",
+      "path": "01_Database/1.clickhouse 集群.md"
+    },
+    {
+      "basename": "单节点 docker 测试MinIO",
+      "path": "13_Software/单节点 docker 测试MinIO.md"
+    },
+    {
+      "basename": "04_longhorn",
+      "path": "02_Kubernetes/3.Rancher/04_longhorn.md"
+    },
+    {
+      "basename": "05_gitlab",
+      "path": "02_Kubernetes/3.Rancher/05_gitlab.md"
+    },
+    {
+      "basename": "03_Traefik",
+      "path": "02_Kubernetes/3.Rancher/03_Traefik.md"
+    },
+    {
+      "basename": "00_软件选型",
+      "path": "15_Knowledge Management/00_软件选型.md"
+    },
+    {
+      "basename": "1.Site 资源",
+      "path": "00_BasicResources/1.Site 资源.md"
+    },
+    {
+      "basename": "Data Version Control",
+      "path": "10_VersionControl/Data Version Control.md"
+    },
+    {
+      "basename": "redis-exporter",
+      "path": "05_Monitor/1_Metrics/VM/redis-exporter.md"
+    },
+    {
+      "basename": "kafka_exporter",
+      "path": "05_Monitor/1_Metrics/VM/kafka_exporter.md"
+    },
+    {
+      "basename": "nginx-vts 模块动态新增",
+      "path": "05_Monitor/1_Metrics/nginx-vts/nginx-vts 模块动态新增.md"
+    },
+    {
+      "basename": "3_Thanos",
+      "path": "05_Monitor/3_Prom HA/3_Thanos.md"
+    },
+    {
+      "basename": "Thanos",
+      "path": "05_Monitor/3_Prom HA/Thanos.md"
+    },
+    {
+      "basename": "index4",
+      "path": "05_Monitor/1_Metrics/nginx-vts/index4.md"
+    },
+    {
+      "basename": "1712828415-32cd6b5719fb0fbfcb6878263f8bc9f6",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-32cd6b5719fb0fbfcb6878263f8bc9f6.png"
+    },
+    {
+      "basename": "1712828415-ec0c2f5d697e0e743d7da89686b13773",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-ec0c2f5d697e0e743d7da89686b13773.avif"
+    },
+    {
+      "basename": "1712828415-f1c0f13dac5751c2b6c49294b5b1620c",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-f1c0f13dac5751c2b6c49294b5b1620c.png"
+    },
+    {
+      "basename": "1712828415-d0b8d912147b1cff36b42b05c1a79b7a",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-d0b8d912147b1cff36b42b05c1a79b7a.avif"
+    },
+    {
+      "basename": "1712828415-aeff54f709cb0c15ffee93c14b09b90b",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-aeff54f709cb0c15ffee93c14b09b90b.png"
+    },
+    {
+      "basename": "1712828415-555556fb1c34de45bfa45cb324de7ce2",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-555556fb1c34de45bfa45cb324de7ce2.avif"
+    },
+    {
+      "basename": "1712828415-6597d40d536745151672cdf6a239b17a",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-6597d40d536745151672cdf6a239b17a.webp"
+    },
+    {
+      "basename": "1712828415-999c8ae9ba3eaa4a4dfcafb64feb9c25",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-999c8ae9ba3eaa4a4dfcafb64feb9c25.webp"
+    },
+    {
+      "basename": "1712828415-63f1f1aa2305d1b9b115570d2b9e9e56",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-63f1f1aa2305d1b9b115570d2b9e9e56.avif"
+    },
+    {
+      "basename": "1712828415-4e3d6f3ca101827a0f802d85f01f6be6",
+      "path": "05_Monitor/3_Prom HA/attachments/1712828415-4e3d6f3ca101827a0f802d85f01f6be6.avif"
+    },
+    {
+      "basename": "08_win 安装",
+      "path": "07_Hardware/08_win 安装.md"
+    },
+    {
+      "basename": "02_Alert TTS",
+      "path": "05_Monitor/2_Monitor visualization/02_Alert TTS.md"
+    },
+    {
+      "basename": "2023-07-21_17-27",
+      "path": "05_Monitor/2_Monitor visualization/attachments/2023-07-21_17-27.png"
+    },
+    {
+      "basename": "2023-07-24_17-27",
+      "path": "05_Monitor/2_Monitor visualization/attachments/2023-07-24_17-27.png"
+    },
+    {
+      "basename": "Drawing 2024-09-09 18.04.04.excalidraw",
+      "path": "Excalidraw/Drawing 2024-09-09 18.04.04.excalidraw.md"
+    },
+    {
+      "basename": "01_monitor sys",
+      "path": "18_Observability/Monitor visualization/01_monitor sys.md"
+    },
+    {
+      "basename": "Bastillion 使用指南",
+      "path": "15_Knowledge Management/Bastillion 使用指南.md"
+    },
+    {
+      "basename": "ibswufe系统使用说明",
+      "path": "15_Knowledge Management/ibswufe系统使用说明.md"
+    },
+    {
+      "basename": "密码修改指南",
+      "path": "15_Knowledge Management/密码修改指南.md"
+    },
+    {
+      "basename": "告警规则",
+      "path": "18_Observability/Alertmangement/告警规则.md"
+    },
+    {
+      "basename": "jaeger",
+      "path": "18_Observability/Tracing/jaeger.md"
+    },
+    {
+      "basename": "signoz",
+      "path": "18_Observability/Tracing/signoz.md"
+    },
+    {
+      "basename": "OTEL",
+      "path": "18_Observability/OTEL/OTEL.md"
+    },
+    {
+      "basename": "聚合与收敛",
+      "path": "18_Observability/Alertmangement/聚合与收敛.md"
+    },
+    {
+      "basename": "DNS Server",
+      "path": "03_Network/1_DNS/DNS Server.md"
+    },
+    {
+      "basename": "Nightingale",
+      "path": "18_Observability/Alertmangement/Nightingale.md"
+    },
+    {
+      "basename": "helm install nightingale",
+      "path": "18_Observability/Alertmangement/helm install nightingale.md"
+    },
+    {
+      "basename": "6.手动删除crd资源",
+      "path": "02_Kubernetes/02_01_Fundamentals/6.手动删除crd资源.md"
+    },
+    {
+      "basename": "手动删除名称空间",
+      "path": "02_Kubernetes/02_01_Fundamentals/手动删除名称空间.md"
+    },
+    {
+      "basename": "00-install",
+      "path": "12_Authorization/02_Authentik/00-install.md"
+    },
+    {
+      "basename": "index",
+      "path": "12_Authorization/02_Authentik/examples/2024-04-18-1713432678/index.md"
+    }
+  ],
+  "omittedPaths": [],
+  "maxLength": null,
+  "openType": "tab"
+}

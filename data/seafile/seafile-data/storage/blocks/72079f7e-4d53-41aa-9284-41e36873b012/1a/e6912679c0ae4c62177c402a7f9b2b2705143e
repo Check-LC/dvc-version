@@ -1,0 +1,5 @@
+目的：在 cert-manager 中使用 lets encrypt 通过 alidns 的 webhook 来创建证书。
+需要：创建一个子用户
+
+- 在 RAM 访问控制台创建一个用户，给予 api 访问即可，创建后点击用户，编辑授权。
+![创建用户并授权](attachments/ali-dns-ram-acl.png)

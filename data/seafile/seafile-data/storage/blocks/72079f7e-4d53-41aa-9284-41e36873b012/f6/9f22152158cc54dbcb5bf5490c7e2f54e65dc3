@@ -1,0 +1,45 @@
+1 . [版本地址](https://github.com/ncabatoff/process-exporter/releases)
+
+2 . 修改配置文件，监控全部进程
+
+```
+process_names:
+  - name: "{{.Comm}}"
+    cmdline:
+    - '.+'
+```
+
+3 . systemd 管理
+
+```
+vim  /etc/systemd/system/process_exporter.service 
+[Unit]
+Description=process_exporter
+Documentation=https://prometheus.io/
+After=network.target
+[Service]
+Type=simple
+ExecStart=/home/inboc/demo/process_exporter/process-exporter -config.path=/home/inboc/demo/process_exporter/conf.yml
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+
+systemctl daemon-reload
+systemctl start process_exporter.service   &&   systemctl enabled process_exporter.service
+
+```
+
+4 . prometheus 新增job
+
+```
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["10.13.3.109:9090"]
+  - job_name: "node_exporter"
+    static_configs:
+      - targets: ["10.13.3.110:9100"]
+  - job_name: 'process_exporter'
+    static_configs:
+    - targets: ['10.13.3.110:9256']
+```

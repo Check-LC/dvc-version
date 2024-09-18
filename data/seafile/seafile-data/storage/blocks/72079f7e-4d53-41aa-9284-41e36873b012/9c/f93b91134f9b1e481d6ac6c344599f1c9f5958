@@ -1,0 +1,137 @@
+[参考](https://zhuanlan.zhihu.com/p/475053858)
+## 1 . install
+<iframe 
+    height=600
+    width='100%'
+    src='https://dvc.org/doc/install/linux#from-repo-on-debian-ubuntu'
+    allowfullscreen></iframe>
+
+## 2 . Get Started
+### 2.1 DVC Push
+```bash
+# 本地-->远端
+ls DVC/
+    build  Dockerfile  LICENSE  nginx.conf  node_modules  package.json  package-lock.json  public  README.md  src
+git init
+dvc init
+dvc remote add -d myremote s3://test/dvc           # 配置远端存储位置 是S3://bucket/path 
+dvc remote modify myremote endpointurl http://10.8.0.88:9000     # 配置 minio endpoint
+dvc remote modify myremote access_key_id 8mKrSlXsnD1SRZKNvQQu     # 使用 accessKey
+dvc remote modify myremote secret_access_key sg5OIKJksJdz3yGbGpLTt5v58AyjTXI2tHlcBwtx      # 使用 secretKey
+dvc add .
+    ERROR: Path: /home/inboc does not overlap with base path: /home/inboc/DVC
+dvc add ./*
+    100% Adding...|██████████████████████████████████████████████████████████████████████████████████████|10/10 [00:24,  2.49s/file]
+    To track the changes with git, run:
+        git add src.dvc build.dvc README.md.dvc public.dvc LICENSE.dvc Dockerfile.dvc nginx.conf.dvc package-lock.json.dvc node_modules.dvc .gitignore package.json.dvc
+    To enable auto staging, run:
+        dvc config core.autostage true
+dvc push -vvv
+dvc remote list  
+    myremote s3://test/dvc
+```
+
+- 执行以上命令之后生成的配置 ./.dvc/config 文件
+```ini
+[core]
+    remote = myremote
+['remote "myremote"']
+    url = S3://test/dvc
+    endpointurl = http://10.8.0.88:9000
+    access_key_id = 8mKrSlXsnD1SRZKNvQQu
+    secret_access_key = sg5OIKJksJdz3yGbGpLTt5v58AyjTXI2tHlcBwtx
+```
+>[!Note]
+>还需要研究 .gitignore, . Dvcignore 应该在其中书写什么（数据文件名+），被 git 管理的将不再被 dvc 管理\
+>以及下文需要研究版本控制和 branch 合并
+### 2.2 Git Push
+```Bash
+git remote add origin ssh://git@10.8.0.90:9922/root/dvc.git
+git add . &&  git commit -m 'v1'
+git branch -M main
+git push -uf origin main
+```
+## 3. DVC Pull
+```Bash
+# 初始化
+git init
+dvc init
+
+# 连接远程git
+git remote add origin ssh://git@10.8.0.90:9922/root/dvc.git
+
+# 连接远程 S3
+dvc remote add -d myremote s3://test/dvc
+dvc remote modify myremote endpointurl http://10.8.0.88:9000
+dvc remote modify myremote access_key_id 8mKrSlXsnD1SRZKNvQQu
+dvc remote modify myremote secret_access_key sg5OIKJksJdz3yGbGpLTt5v58AyjTXI2tHlcBwtx
+
+# 下载目标数据
+git checkout origin/main -- Dockerfile.dvc
+dvc pull -vvv #根据当前的 *.dvc 文件下载目标数据
+dvc pull build.dvc   # 拉取指定的数据
+```
+## 4. 问题
+1 . Describe
+```cli
+ unexpected error - [Errno 22] Bad Request: An error occurred (400) when calling the HeadObject operation: Bad Request
+```
+- [.] Solution
+```
+endpointurl = http://10.8.0.88:9001  -->  应该是指定 port:9000
+```
+-------------------------------------------------
+2 . Describe
+```
+dvc add ./*
+    Adding...
+    ERROR: output '*' does not exist: [Errno 2] No such file or directory: '/home/project/dvc/*'
+dvc add .
+    ERROR: Path: /home/project does not overlap with base path: /home/project/dvc
+```
+- [.] Solution
+```
+1.
+```
+3 . Describe
+`dvc pull -r myremote`  回显状态是最新的，但是没有任何内容下载，pull失败。排查过程。
+```Bash  TI:"命令输出" HL:"1,19,26"
+dvc pull -vvv
+    2024-01-27 14:27:35,068 DEBUG: v3.40.1 (deb), CPython 3.10.8 on Linux-5.15.0-91-generic-x86_64-with-glibc2.35
+    2024-01-27 14:27:35,068 DEBUG: command: pull -vvv
+    2024-01-27 14:27:35,068 TRACE: Namespace(quiet=0, verbose=3, cprofile=False, cprofile_dump=None, yappi=False, yappi_separate_threads=False, viztracer=False, viztracer_depth=None, viztracer_async=False, pdb=False, instrument=False, instrument_open=False, show_stack=False, cd='.', cmd='pull', jobs=None, targets=[], remote=None, all_branches=False, all_tags=False, all_commits=False, force=False, with_deps=False, recursive=False, run_cache=False, glob=False, allow_missing=False, func=<class 'dvc.commands.data_sync.CmdDataPull'>, parser=DvcParser(prog='dvc', usage=None, description='Data Version Control', formatter_class=<class 'dvc.cli.formatter.RawTextHelpFormatter'>, conflict_handler='error', add_help=False))
+    2024-01-27 14:27:35,292 TRACE:     6.43 mks in collecting stages from /tmp/dvc
+    Collecting                                                                                                                                                                                              |0.00 [00:00,    ?entry/s]
+    Fetching
+    Building workspace index                                                                                                                                                                                |0.00 [00:00,    ?entry/s]
+    Comparing indexes                                                                                                                                                                                      |1.00 [00:00, 2.83kentry/s]
+    Applying changes                                                                                                                                                                                        |0.00 [00:00,     ?file/s]
+    Everything is up to date.
+    2024-01-27 14:27:35,303 DEBUG: Analytics is enabled.
+    2024-01-27 14:27:35,304 TRACE: Saving analytics report to /tmp/tmpnttsqfki
+    2024-01-27 14:27:35,304 DEBUG: Trying to spawn ['daemon', 'analytics', '/tmp/tmpnttsqfki', '-vv']
+    2024-01-27 14:27:35,313 DEBUG: Spawned ['daemon', 'analytics', '/tmp/tmpnttsqfki', '-vv'] with pid 55491
+    2024-01-27 14:27:35,314 TRACE: Process 55486 exiting with 0
+
+dvc config -l --show-origin
+    .dvc/config     remote.myremote.url=s3://test/dvc
+    .dvc/config     remote.myremote.endpointurl=http://10.8.0.88:9000
+    .dvc/config     remote.myremote.access_key_id=8mKrSlXsnD1SRZKNvQQu
+    .dvc/config     remote.myremote.secret_access_key=sg5OIKJksJdz3yGbGpLTt5v58AyjTXI2tHlcBwtx
+    .dvc/config     core.remote=myremote
+
+dvc data status
+    No changes in an empty git repo.                                                                                                                                                                                                  
+    (there are changes not tracked by dvc, use "git status" to see)
+```
+
+- [.] Solution
+```
+首先通过 git 下载到*.dvc 文件
+dvc pull
+```
+## 5. 参考
+### 5.1 命令
+<iframe src="https://blog.csdn.net/weixin_43702653/article/details/125367906" width=100% height="500px" frameborder="0" scrolling="auto"></iframe>
+### 5.2 较系统的文档
+<iframe src="https://zhuanlan.zhihu.com/p/475053858" width=100% height="500px" frameborder="0" scrolling="auto"></iframe>

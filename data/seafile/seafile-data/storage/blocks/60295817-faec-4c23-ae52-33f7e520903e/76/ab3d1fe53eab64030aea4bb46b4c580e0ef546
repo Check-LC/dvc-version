@@ -1,0 +1,4 @@
+module "rancher_auth_openldap" {
+  source          = "../../../modules/rancher/auth_openldap"
+  openldap_config = local.openldap_config
+}

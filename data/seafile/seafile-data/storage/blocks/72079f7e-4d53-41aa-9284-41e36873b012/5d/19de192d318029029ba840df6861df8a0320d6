@@ -1,0 +1,87 @@
+Rancher Chart 基本与原生 Helm Chart 一样。Rancher Chart 添加了两个额外的文件 `app-readme.md` 和 `questions.yaml` 来增强用户体验，但它们与原生 Helm Chart 的使用方式完全相同。在 [Rancher Chart 独有的文件](https://docs.rancher.cn/docs/rancher2/helm-charts/creating-apps/_index/#rancher-chart-%E7%8B%AC%E6%9C%89%E7%9A%84%E6%96%87%E4%BB%B6)中了解有关它们的更多信息
+
+在 `questions.yml` 中，大多数内容都围绕着用户关心的应用配置的问题，但是也可以在此文件中设置一些其他字段。 \
+可以实现类似以下的可视化配置，同时也避免在 chart 中留下敏感内容
+![](attachments/Pasted%20image%2020240621145622.png)
+
+### Question Variable Reference[​]( https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/helm-charts-in-rancher/create-apps#question-variable-reference "Direct link to Question Variable Reference")
+
+This reference contains variables that you can use in `questions.yml` nested under `questions:` .
+
+|Variable|Type|Required|Description|
+|---|---|---|---|
+|variable|string|true|Define the variable name specified in the `values.yml` file, using `foo.bar` for nested objects.|
+|label|string|true|Define the UI label.|
+|description|string|false|Specify the description of the variable.|
+|type|string|false|Default to `string` if not specified (current supported types are string, multiline, boolean, int, enum, password, storageclass, hostname, pvc, secret and cloudcredential).|
+|default|string|false|Specify the default value. Only used if there is no corresponding value in the `values.yml` file.|
+|group|string|false|Group questions by input value.|
+|options|[]string|false|Specify the options when the variable type is `enum`, for example: options:  <br>- "ClusterIP"  <br>- "NodePort"  <br>- "LoadBalancer"|
+|subquestions|[]subquestion|false|Add an array of subquestions.|
+|show_if|string|false|Show current variable if conditional variable is true. For example `show_if: "serviceType=Nodeport"`|
+|show_subquestion_if|string|false|Show subquestions if is true or equal to one of the options. for example `show_subquestion_if: "true"`|
+
+### 简单尝试 ：
+- 第一次书写并 push chart 之后，loki 安装没有成功读取这个 questions.yaml 文件，所以删除 chart 后书写一个简单示例验证格式，发现可以正常渲染。
+- harbor 存在一些缓存之类的问题？修改 chart 上传之后的 questions 没有成功更新。修改之后，删除并重新刷新仓库。
+
+```yaml TI:"format test"
+categories:  
+  - logging  
+namespace: loki  
+questions:  
+- variable: loki.image.tag  
+  default: "main-9289493-amd64"  
+  description: "Manager image"  
+  type: string  
+  label: loki image tag  
+  group: "Images Settings"  
+- variable: loki.memcached.chunk_cache.enable  
+  label: Enable Upgrade Checker  
+  description: 'Upgrade Checker that periodically checks for new Longhorn versions. When a new version is available, a notification appears on the Longhorn UI. This setting is enabled by default.'  
+  group: "Default Settings"  
+  type: boolean  
+  default: "true"
+```
+
+### 新增 tenants 设置
+目标数据：
+```
+tenants:
+  - name: test
+    password: test123  
+```
+
+
+- 这个枚举类型成功传递，但是没有意义 
+```
+categories:  
+  - logging  
+namespace: loki  
+questions:  
+  - variable: loki.tenants  
+    label: Loki Tenants list  
+    description: "Loki Tenants Set BY enum type"  
+    group: "Loki Tenants"
+type: enum  
+options:  
+  - - name: inboc  
+      password: Inboc@2020  
+```
+
+不能 使用其他类型，程序将报错不能迭代
+```
+Waiting for Kubernetes API to be available
+
+Mon, Jun 24 2024 10:21:02 amhelm install --namespace=loki --timeout=10m0s --values=/home/shell/helm/values-loki-6.6.3.yaml --version=6.6.3 --wait=true loki /home/shell/helm/loki-6.6.3.tgz
+
+Mon, Jun 24 2024 10:21:03 amError: INSTALLATION FAILED: template: loki/templates/gateway/secret-gateway.yaml:12:8: executing "loki/templates/gateway/secret-gateway.yaml" at <tpl .basicAuth.htpasswd $>: error calling tpl: error during tpl function execution for "{{ if .Values.loki.tenants }}\n {{- range $t := .Values.loki.tenants }}\n{{ htpasswd (required \"All tenants must have a 'name' set\" $t.name) (required \"All tenants must have a 'password' set\" $t.password) }}\n {{- end }}\n{{ else }} {{ htpasswd (required \"'gateway.basicAuth.username' is required\" .Values.gateway.basicAuth.username) (required \"'gateway.basicAuth.password' is required\" .Values.gateway.basicAuth.password) }} {{ end }}": template: loki/templates/gateway/secret-gateway.yaml:2:25: executing "loki/templates/gateway/secret-gateway.yaml" at <.Values.loki.tenants>: range can't iterate over [{name: 'inboc', password: 'Inboc@2020'}]
+```
+
+对比
+```
+  tenants: []
+  tenants: '[{name: ''inboc'', password: ''Inboc@2020''}]'
+```
+
+secret 类型是选择一个当前名称空间已经存在的 secret 填入值

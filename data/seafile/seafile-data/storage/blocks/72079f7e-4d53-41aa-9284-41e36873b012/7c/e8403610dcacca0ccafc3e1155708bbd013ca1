@@ -1,0 +1,4 @@
+## 1. helm 安装 Traefik
+安装之后验证
+##  ingress-nginx url rewrite
+[URL Rewrite](../4.Nginx-ingress/URL%20Rewrite.md)

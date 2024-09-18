@@ -1,0 +1,121 @@
+## 1. openldap 启用监视模块
+1. 检查是否在 OpenLDAP 安装上启用了监视模块：
+```
+`ldapsearch -Y EXTERNAL -H ldapi:/// -b "cn=module{0},cn=config"`  
+```
+如果响应中包含 `olcModuleLoad: {1}back_monitor` ，那么将启用监视模块。您可以跳至步骤 3。
+
+2. 要启用监视模块，请创建 `module_monitoring.ldif` 文件并运行以下命令：
+```plain
+dn: cn=module{0},cn=config
+changetype: modify
+add: olcModuleLoad
+olcModuleLoad: {1}back_monitor
+```
+
+```bash
+ldapmodify -Y EXTERNAL -H ldapi:/// -f module_monitor.ldif
+```
+
+3. 创建用于监视用户的加密密码：
+
+```bash
+slappasswd -s <MONITOR_USER_PASSWORD>
+```
+
+4. 创建 `cn_monitor.ldif` 文件，然后运行以下命令来添加监视用户：
+
+```plain
+dn: cn=monitor,dc=inboc,dc=net
+objectClass: simpleSecurityObject
+objectClass: organizationalRole
+cn: monitor
+description: LDAP monitor
+userPassword: {SSHA}UiIUaWLBYOo+2O88GNxFAdzp5M9cmlWi
+```
+
+```bash
+ldapadd -x -D <ADMIN_DISTINGUISHED_NAME> -w <ADMIN_PASSWORD> -f cn_monitor.ldif
+```
+
+5. 创建 `database_monitor.ldif` 文件，然后运行以下命令来配置监视数据库：
+
+```plain
+dn: olcDatabase={2}Monitor,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcMonitorConfig
+olcDatabase: {2}Monitor
+olcAccess: {0}to dn.subtree="cn=Monitor" by dn.base="cn=monitor,dc=inboc,dc=net" read by * none
+```
+
+```bash
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f database_monitor.ldif
+```
+
+6. 要测试监视模块，请运行以下命令：
+
+```bash
+ldapsearch -x -D <NEW_MONITORING_USER_DISTINGUISHED_NAME> -w <MONITOR_USER_PASSWORD> -b cn=Uptime,cn=Time,cn=Monitor -s base '(objectClass=*)' '*' '+'
+```
+## 2. install openldap-exporter
+下载最新版本，此项目已经归档。
+`wget https://github.com/tomcz/openldap_exporter/releases/download/v2.2.2/openldap_exporter-linux-amd64.gz`
+需要配置查询时使用的 binddn
+```
+cat /etc/ldap/inboc/exporter.yml
+---
+ldapUser: "cn=monitor,dc=inboc,dc=net"
+ldapPass: "Inboc@2020"
+```
+run app
+```
+./openldap_exporter-linux-amd64 --config /etc/ldap/inboc/exporter.yml
+```
+http://IP: 9330/metrics
+```
+# HELP openldap_bind successful vs unsuccessful ldap bind attempts
+# TYPE openldap_bind counter
+openldap_bind{result="ok"} 2
+# HELP openldap_dial successful vs unsuccessful ldap dial attempts
+# TYPE openldap_dial counter
+openldap_dial{result="ok"} 2
+# HELP openldap_monitor_counter_object cn=Monitor (objectClass=monitorCounterObject) monitorCounter
+# TYPE openldap_monitor_counter_object gauge
+openldap_monitor_counter_object{dn="cn=Bytes,cn=Statistics,cn=Monitor"} 2.4246058e+07
+openldap_monitor_counter_object{dn="cn=Current,cn=Connections,cn=Monitor"} 1
+openldap_monitor_counter_object{dn="cn=Entries,cn=Statistics,cn=Monitor"} 1262
+openldap_monitor_counter_object{dn="cn=Max File Descriptors,cn=Connections,cn=Monitor"} 1.048576e+06
+openldap_monitor_counter_object{dn="cn=PDU,cn=Statistics,cn=Monitor"} 2234
+openldap_monitor_counter_object{dn="cn=Read,cn=Waiters,cn=Monitor"} 1
+openldap_monitor_counter_object{dn="cn=Referrals,cn=Statistics,cn=Monitor"} 0
+openldap_monitor_counter_object{dn="cn=Total,cn=Connections,cn=Monitor"} 577
+openldap_monitor_counter_object{dn="cn=Write,cn=Waiters,cn=Monitor"} 0
+# HELP openldap_monitor_operation cn=Operations,cn=Monitor (objectClass=monitorOperation) monitorOpCompleted
+# TYPE openldap_monitor_operation gauge
+openldap_monitor_operation{dn="cn=Abandon,cn=Operations,cn=Monitor"} 0
+openldap_monitor_operation{dn="cn=Add,cn=Operations,cn=Monitor"} 3
+openldap_monitor_operation{dn="cn=Bind,cn=Operations,cn=Monitor"} 290
+openldap_monitor_operation{dn="cn=Compare,cn=Operations,cn=Monitor"} 0
+openldap_monitor_operation{dn="cn=Delete,cn=Operations,cn=Monitor"} 0
+openldap_monitor_operation{dn="cn=Extended,cn=Operations,cn=Monitor"} 0
+openldap_monitor_operation{dn="cn=Modify,cn=Operations,cn=Monitor"} 1
+openldap_monitor_operation{dn="cn=Modrdn,cn=Operations,cn=Monitor"} 0
+openldap_monitor_operation{dn="cn=Search,cn=Operations,cn=Monitor"} 681
+openldap_monitor_operation{dn="cn=Unbind,cn=Operations,cn=Monitor"} 10
+# HELP openldap_monitored_object cn=Monitor (objectClass=monitoredObject) monitoredInfo
+# TYPE openldap_monitored_object gauge
+openldap_monitored_object{dn="cn=Active,cn=Threads,cn=Monitor"} 1
+openldap_monitored_object{dn="cn=Backload,cn=Threads,cn=Monitor"} 1
+openldap_monitored_object{dn="cn=Max Pending,cn=Threads,cn=Monitor"} 0
+openldap_monitored_object{dn="cn=Max,cn=Threads,cn=Monitor"} 16
+openldap_monitored_object{dn="cn=Open,cn=Threads,cn=Monitor"} 4
+openldap_monitored_object{dn="cn=Pending,cn=Threads,cn=Monitor"} 0
+openldap_monitored_object{dn="cn=Starting,cn=Threads,cn=Monitor"} 0
+openldap_monitored_object{dn="cn=Uptime,cn=Time,cn=Monitor"} 491474
+# HELP openldap_scrape successful vs unsuccessful ldap scrape attempts
+# TYPE openldap_scrape counter
+openldap_scrape{result="ok"} 2
+```
+
+### 需要自行编写 promql
+

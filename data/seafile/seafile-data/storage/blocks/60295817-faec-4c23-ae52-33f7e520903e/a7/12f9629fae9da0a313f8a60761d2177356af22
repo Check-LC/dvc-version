@@ -1,0 +1,13 @@
+resource "rancher2_role_template" "rancher_role_template" {
+  name    = var.role_template_name
+  context = var.role_template_context
+
+  dynamic "rules" {
+    for_each = var.role_template_rules
+    content {
+      api_groups = rules.value.api_groups
+      resources  = rules.value.resources
+      verbs      = rules.value.verbs
+    }
+  }
+}

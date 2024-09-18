@@ -1,0 +1,18 @@
+variable "role_template_name" {
+  description = "rancher role template name"
+  type        = string
+}
+
+variable "role_template_context" {
+  description = "rancher role template context"
+  type        = string
+}
+
+variable "role_template_rules" {
+  type = list(object({
+    api_groups = list(string)
+    resources  = list(string)
+    verbs      = list(string)
+  }))
+  description = "List of rule sections"
+}

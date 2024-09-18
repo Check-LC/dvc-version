@@ -1,0 +1,9 @@
+variable "cluster_name" {
+  description = "The name for the cluster"
+  type        = string
+}
+
+variable "kubernetes_version" {
+  description = "The kubernetes version for the cluster"
+  type        = string
+}

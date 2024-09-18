@@ -1,0 +1,23 @@
+charts values 关注的资源 \
+启用组件----rke2ControllerManager、rke2Scheduler、rke2Proxy、rke2Etcd、rke2IngressNginx \
+prometheus--rentation time 、volumes &&  service discovery
+
+## prometheus 资源对象
+>[!note] 
+>区分以下二者：
+>```
+>promtheus.prometheusspec.storagespec.volumeclaimtemplate.spec.resources.limits.storage: 100Gi
+>promtheus.prometheusspec.retention: 2d
+>promtheus.prometheusspec.retentionsize: 100GiB
+>```
+### 1. Prometheus 的 `retentionSize`
+
+`retentionSize` 是 Prometheus 配置中的一个参数，它指定了 Prometheus 在其本地存储中可以保持多少历史数据的总大小。当 Prometheus 的数据存储达到这个大小限制时，它会开始删除最旧的数据，以确保不会超过这个配置的大小。这是一种数据保留策略，用于控制 Prometheus 使用的磁盘空间量，防止无限制的数据增长最终消耗完所有可用的存储资源。
+### 2. Prometheus 持久化存储卷的资源大小
+
+在 Kubernetes 中部署 Prometheus 时，通常会配置一个持久化存储卷（Persistent Volume, PV）来存储 Prometheus 的数据。这个存储卷的大小定义了物理存储资源的最大容量，Prometheus 可以使用的磁盘空间上限。如果这个存储卷被数据填满，Prometheus 将无法继续写入新数据，即使老数据按照 `retentionSize` 设置被清除，因为物理磁盘空间已经满了
+
+`retentionSize` 是 Prometheus 数据管理的逻辑配置，与 Prometheus 如何处理其数据直接相关；
+持久化存储卷的大小是 Kubernetes 层面的物理存储配置，它提供了存储 Prometheus 数据的硬件资源
+
+![01. Prometheus Operator](../5.Operator/01.%20Prometheus%20Operator.md)

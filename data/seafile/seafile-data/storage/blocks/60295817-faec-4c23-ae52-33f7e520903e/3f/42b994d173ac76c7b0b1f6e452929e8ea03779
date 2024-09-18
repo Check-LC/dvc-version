@@ -1,0 +1,19 @@
+module "resource_rancher_role_template" {
+  source = "../../../modules/rancher/role_template"
+
+  for_each = {
+    for item in flatten([
+      for role_template_name, role_template_detail in var.role_templates_info : [{
+        key     = role_template_name
+        name    = role_template_name
+        context = role_template_detail.context
+        rules   = role_template_detail.rules
+        }
+      ]
+    ]) : item.key => item
+  }
+
+  role_template_name    = each.value.name
+  role_template_context = each.value.context
+  role_template_rules   = each.value.rules
+}

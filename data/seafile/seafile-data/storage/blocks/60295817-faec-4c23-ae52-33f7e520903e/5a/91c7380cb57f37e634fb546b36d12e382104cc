@@ -1,0 +1,9 @@
+output "namespace" {
+  sensitive = false
+  value     = rancher2_namespace.cluster_namespace
+}
+
+output "project" {
+  sensitive = false
+  value     = rancher2_project.cluster_project
+}

@@ -1,0 +1,4 @@
+output "current_nodes" {
+  sensitive = false
+  value     = rancher2_cluster_sync.wait_cluster_ready.nodes
+}

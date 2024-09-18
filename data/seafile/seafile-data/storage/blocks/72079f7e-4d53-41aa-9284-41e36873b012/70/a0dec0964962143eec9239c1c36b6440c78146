@@ -1,0 +1,194 @@
+{
+  "main": {
+    "id": "046cddd958542f0a",
+    "type": "split",
+    "children": [
+      {
+        "id": "41ffcac4a48f1029",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1ccbca7f6ba7408e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "obsidian/01_clickhouse/clickhouse 集群.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "18aa495829964862",
+    "type": "split",
+    "children": [
+      {
+        "id": "05612f6804afb3f7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "53694486458bdb84",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "b04373f2dab9f614",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "d1af5f438f75e445",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+  },
+  "right": {
+    "id": "7cc8c74c90d96daf",
+    "type": "split",
+    "children": [
+      {
+        "id": "ef07126f9d0bf851",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0be10fd7bef9860a",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "obsidian/01_clickhouse/clickhouse 集群.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "9deaefa317575568",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "obsidian/01_clickhouse/clickhouse 集群.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "e80549fd437d73ab",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "256be61cdc2e5c00",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "obsidian/01_clickhouse/clickhouse 集群.md"
+              }
+            }
+          }
+        ],
+        "currentTab": 3
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false
+    }
+  },
+  "active": "1ccbca7f6ba7408e",
+  "lastOpenFiles": [
+    "obsidian/tips.md",
+    "obsidian/[.md",
+    "obsidian/02_kubesphere/kubesphere集群.md",
+    "obsidian/01_clickhouse/clickhouse 集群.md",
+    "obsidian/01_clickhouse/attchments",
+    "obsidian/clickhouse/未命名.md",
+    "obsidian/03_wyse3040/wyse3040改造.md",
+    "obsidian/01_clickhouse",
+    "chao.long/kubesphere/kubesphere集群.md",
+    "obsidian/attchments/waiting_install_complete.jpg.md",
+    "obsidian/attchments",
+    "obsidian/03_wyse3040/attachments/unlockbios03.jpg",
+    "obsidian/03_wyse3040/attachments/unlockbios02.jpg",
+    "obsidian/03_wyse3040/attachments/unlockBIOS01.jpg",
+    "obsidian/03_wyse3040/attachments/08_ipconfig.png",
+    "obsidian/03_wyse3040/attachments/07_select_network_config.png",
+    "obsidian/03_wyse3040/attachments/06_waitingforfinish.png",
+    "obsidian/03_wyse3040/attachments/05_erase_disk_and_install.png",
+    "obsidian/03_wyse3040/attachments/04_exec_installos.png",
+    "obsidian/03_wyse3040/attachments/03_GRUB install.png",
+    "obsidian/03_wyse3040/attachments/02_uefi_usbdriver.png",
+    "obsidian/03_wyse3040/attachments",
+    "obsidian/02_kubesphere/attchments",
+    "obsidian/03_wyse3040",
+    "obsidian/02_kubesphere",
+    "obsidian",
+    "attchments/waiting_install_complete.jpg.md",
+    "attchments",
+    "chao.long/wyse3040/wyse3040改造.md",
+    "chao.long/kubesphere 1/kubesphere多节点部署.md",
+    "chao.long/2023.4.7/attchments/waiting_install_complete.jpg.crdownload",
+    "attachments/选择U盘引导.png.md",
+    "home/chao.long/nextcloud/inboc-sys-junior/home/chao.long/nextcloud/inboc-sys-junior/obsidian/kubesphere/attachment/1.png.md",
+    "home/chao.long/nextcloud/inboc-sys-junior/obsidian/kubesphere/kubesphere多节点部署.md",
+    "home/chao.long/nextcloud/inboc-sys-junior/home/chao.long/nextcloud/inboc-sys-junior/obsidian/kubesphere/attachment.md",
+    "home/chao.long/nextcloud/inboc-sys-junior/obsidian/kubesphere/attachment.md",
+    "home/chao.long/nextcloud/inboc-sys-junior/kubesphere/kubesphere多节点部署.md",
+    "obsidian/kubesphere/kubesphere多节点部署.md",
+    "home/chao.long/nextcloud/inboc-sys-junior/obsidian/obsidian/kubesphere/kubesphere多节点部署.md",
+    "Untitled.md",
+    "obsidian/kubesphere/nginx/nginx.md"
+  ]
+}

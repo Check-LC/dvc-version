@@ -1,0 +1,19 @@
+resource "authentik_group" "groups_level3" {
+  for_each = {
+    for item in flatten([
+      for group_name, group_detail in var.groups_info.level3 : [
+        {
+          key    = group_name
+          parent = authentik_group.groups_level2[group_detail.parent].id
+        }
+      ]
+    ]) : item.key => item
+  }
+
+  name   = each.key
+  parent = each.value.parent
+  depends_on = [
+    authentik_group.groups_level1,
+    authentik_group.groups_level2
+  ]
+}

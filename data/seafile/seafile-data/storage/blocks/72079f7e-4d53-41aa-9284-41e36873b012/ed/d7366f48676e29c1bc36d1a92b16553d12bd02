@@ -1,0 +1,45 @@
+## 基本信息
+
+|          硬盘           | 网络（connected 网卡或者确定设备信息的网卡） |
+| :-------------------: | :-------------------------- |
+|       reformat        | 加入 vlan                     |
+| 1G --  /boot  --  xfs | enp3s0f0.vlan102            |
+|    16G   --  swap     | 10.2.0.0/22（子网掩码决定网段主机位的数量） |
+|      /  --  xfs       | 10.2.0.254                  |
+
+## ipmi 远程
+ 1. 安装 jdk / jre ；存在较早的机型只能使用 jdk8 下的 `javaws ./launch.jnlp` 来加载远程控制
+ 2. 登录服务器管理控制台，下载启动控制台的 java 插件的文件 `launch.jnlp ` （保持 web 不要退出，需要每次更新该文件来授权）
+
+## 挂载以远程安装
+
+1. 挂载 virtual media；选择 iso plugin 
+2. 重启机器 `power control--set power reset`
+3. bios 中重设 boot 顺序，或者 F11在启动项菜单中选择目标启动方式。
+4. 本次遇见挂载 iso 不能被成功读取。（原因：异地机房，网络是通过防火墙 vpn 链接的，或许是因网速较慢不能成功读取）
+5. 控制台找到可以进行远程配置虚拟媒体的挂载，三种方式：web launch--virtual media、floppy disk、virtual CD-ROM（使用 samba 挂载）
+6. ubuntu 2204安装配置测试用的 samba ，配置过程
+
+```bash
+vim /etc/samba/smb.conf
+	[iso]
+	   comment = public
+	   path = /home/inboc/iso/
+	   guest ok = no
+	   read only = yes
+	   create mask = 0664
+	   valid users = inboc
+
+sudo systemctl restart smbd.service nmbd.service
+sudo smbpasswd -a inboc
+sudo /etc/init.d/samba-ad-dc restart
+
+#使用
+主机：10.8.0.89
+路径：/iso/ubuntu-22.04.3-live-server-amd64.iso
+用户：inboc
+密码：inboc2020
+
+```
+
+此时应能成功挂载 ，重启服务器选择目标启动项目即可

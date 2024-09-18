@@ -1,0 +1,424 @@
+## Nginx虚拟主机流量状态模块
+
+## 目录
+
+*   [9、管控指令（Control）](#9%E3%80%81%E7%AE%A1%E6%8E%A7%E6%8C%87%E4%BB%A4%EF%BC%88Control%EF%BC%89)
+    *   [动态获取流量区域（zones）状态](#%E5%8A%A8%E6%80%81%E8%8E%B7%E5%8F%96%E6%B5%81%E9%87%8F%E5%8C%BA%E5%9F%9F%EF%BC%88zones%EF%BC%89%E7%8A%B6%E6%80%81)
+        *   [获取全部区域](#%E8%8E%B7%E5%8F%96%E5%85%A8%E9%83%A8%E5%8C%BA%E5%9F%9F)
+        *   [获取组区域](#%E8%8E%B7%E5%8F%96%E7%BB%84%E5%8C%BA%E5%9F%9F)
+        *   [获取每个区域](#%E8%8E%B7%E5%8F%96%E6%AF%8F%E4%B8%AA%E5%8C%BA%E5%9F%9F)
+    *   [动态重置流量区域](#%E5%8A%A8%E6%80%81%E9%87%8D%E7%BD%AE%E6%B5%81%E9%87%8F%E5%8C%BA%E5%9F%9F)
+        *   [重置全部分区](#%E9%87%8D%E7%BD%AE%E5%85%A8%E9%83%A8%E5%88%86%E5%8C%BA)
+        *   [重置组区域](#%E9%87%8D%E7%BD%AE%E7%BB%84%E5%8C%BA%E5%9F%9F)
+        *   [重置每个分区](#%E9%87%8D%E7%BD%AE%E6%AF%8F%E4%B8%AA%E5%88%86%E5%8C%BA)
+    *   [动态删除流量区域](#%E5%8A%A8%E6%80%81%E5%88%A0%E9%99%A4%E6%B5%81%E9%87%8F%E5%8C%BA%E5%9F%9F)
+        *   [删除全部分区](#%E5%88%A0%E9%99%A4%E5%85%A8%E9%83%A8%E5%88%86%E5%8C%BA)
+        *   [删除组分区](#%E5%88%A0%E9%99%A4%E7%BB%84%E5%88%86%E5%8C%BA)
+        *   [删除每个分区](#%E5%88%A0%E9%99%A4%E6%AF%8F%E4%B8%AA%E5%88%86%E5%8C%BA)
+*   [10、设置指令（Set）](#10%E3%80%81%E8%AE%BE%E7%BD%AE%E6%8C%87%E4%BB%A4%EF%BC%88Set%EF%BC%89)
+*   [11、JSON字段说明](#11%E3%80%81JSON%E5%AD%97%E6%AE%B5%E8%AF%B4%E6%98%8E)
+    *   [状态中使用的Json](#%E7%8A%B6%E6%80%81%E4%B8%AD%E4%BD%BF%E7%94%A8%E7%9A%84Json)
+    *   [Control中使用的Json](#Control%E4%B8%AD%E4%BD%BF%E7%94%A8%E7%9A%84Json)
+
+### 9、管控指令（Control）
+
+control指令能够通过查询字符串重置或删除流量区域。  
+该请求以JSON文档响应。
+
+*   URI 语法
+    *   /_`{status_uri}`_/control?cmd=_`{command}`_&group=_`{group}`_&zone=_`{name}`_
+
+```Nginx
+http {
+
+    geoip_country /usr/share/GeoIP/GeoIP.dat;
+
+    vhost_traffic_status_zone;
+    vhost_traffic_status_filter_by_set_key $geoip_country_code country::*;
+
+    ...
+
+    server {
+
+        server_name example.org;
+
+        ...
+
+        vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;
+
+        location /status {
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+        }
+    }
+}
+```
+
+如果设置如上，则control的uri类似于`example.org/status/control`。
+
+可用的请求参数如下：
+
+*   **cmd**\=<`status`|`reset`|`delete`\>
+    *   status
+        *   它将流量区域（zones）的状态返回为json格式，如`status/format/json`。
+    *   reset
+        *   重置流量区域（zones）而不删除共享中的节点（nodes）。
+    *   delete
+        *   删除共享内存中的流量区域（zones）。当重新请求时重新创建时。
+*   **group**\=<`server`|`filter`|`upstream@alone`|`upstream@group`|`cache`|`*`\>
+    *   server
+    *   filter
+    *   upstream@alone
+    *   upstream@group
+    *   cache
+    *   \*
+*   **zone**\=_name_
+    *   server
+        *   _name_
+    *   filter
+        *   _filter\_group_@_name_
+    *   upstream@group
+        *   _upstream\_group_@_name_
+    *   upstream@alone
+        *   @_name_
+    *   cache
+        *   _name_
+
+#### 动态获取流量区域（zones）状态
+
+与`status/format/json`相似，只是它可以获得每个区域。
+
+##### 获取全部区域
+
+*   与`status/format/json`完全相同。
+    *   /status/control?cmd=status&group=\*
+
+##### 获取组区域
+
+*   mainZones
+    *   /status/control?cmd=status&group=server&zone=::main
+*   serverZones
+    *   /status/control?cmd=status&group=server&zone=\*
+*   filterZones
+    *   /status/control?cmd=status&group=filter&zone=\*
+*   upstreamZones
+    *   /status/control?cmd=status&group=upstream@group&zone=\*
+*   upstreamZones::nogroups
+    *   /status/control?cmd=status&group=upstream@alone&zone=\*
+*   cacheZones
+    *   /status/control?cmd=status&group=cache&zone=\*
+
+**mainZones**中的状态值，包括`hostName`、`nginxVersion`、`loadMsec`、`nowMsec`、`connections`。
+
+##### 获取每个区域
+
+*   single zone in serverZones
+    *   /status/control?cmd=status&group=server&zone=_`name`_
+*   single zone in filterZones
+    *   /status/control?cmd=status&group=filter&zone=_`filter_group`_@_`name`_
+*   single zone in upstreamZones
+    *   /status/control?cmd=status&group=upstream@group&zone=_`upstream_group`_@_`name`_
+*   single zone in upstreamZones::nogroups
+    *   /status/control?cmd=status&group=upstream@alone&zone=_`name`_
+*   single zone in cacheZones
+    *   /status/control?cmd=status&group=cache&zone=_`name`_
+
+#### 动态重置流量区域
+
+将指定区域的值重置为0。
+
+##### 重置全部分区
+
+*   /status/control?cmd=reset&group=\*
+
+##### 重置组区域
+
+*   serverZones
+    *   /status/control?cmd=reset&group=server&zone=\*
+*   filterZones
+    *   /status/control?cmd=reset&group=filter&zone=\*
+*   upstreamZones
+    *   /status/control?cmd=reset&group=upstream@group&zone=\*
+*   upstreamZones::nogroups
+    *   /status/control?cmd=reset&group=upstream@alone&zone=\*
+*   cacheZones
+    *   /status/control?cmd=reset&group=cache&zone=\*
+
+##### 重置每个分区
+
+*   single zone in serverZones
+    *   /status/control?cmd=reset&group=server&zone=_`name`_
+*   single zone in filterZones
+    *   /status/control?cmd=reset&group=filter&zone=_`filter_group`_@_`name`_
+*   single zone in upstreamZones
+    *   /status/control?cmd=reset&group=upstream@group&zone=_`upstream_group`_@_`name`_
+*   single zone in upstreamZones::nogroups
+    *   /status/control?cmd=reset&group=upstream@alone&zone=_`name`_
+*   single zone in cacheZones
+    *   /status/control?cmd=reset&group=cache&zone=_`name`_
+
+#### 动态删除流量区域
+
+删除共享内存中指定的区域。
+
+##### 删除全部分区
+
+*   /status/control?cmd=delete&group=\*
+
+##### 删除组分区
+
+*   serverZones
+    *   /status/control?cmd=delete&group=server&zone=\*
+*   filterZones
+    *   /status/control?cmd=delete&group=filter&zone=\*
+*   upstreamZones
+    *   /status/control?cmd=delete&group=upstream@group&zone=\*
+*   upstreamZones::nogroups
+    *   /status/control?cmd=delete&group=upstream@alone&zone=\*
+*   cacheZones
+    *   /status/control?cmd=delete&group=cache&zone=\*
+
+##### 删除每个分区
+
+*   single zone in serverZones
+    *   /status/control?cmd=delete&group=server&zone=_`name`_
+*   single zone in filterZones
+    *   /status/control?cmd=delete&group=filter&zone=_`filter_group`_@_`name`_
+*   single zone in upstreamZones
+    *   /status/control?cmd=delete&group=upstream@group&zone=_`upstream_group`_@_`name`_
+*   single zone in upstreamZones::nogroups
+    *   /status/control?cmd=delete&group=upstream@alone&zone=_`name`_
+*   single zone in cacheZones
+    *   /status/control?cmd=delete&group=cache&zone=_`name`_
+
+### 10、设置指令（Set）
+
+可以使用`vhost_traffic_status_set_by_filter`指令分别获取nginx配置中的状态值。  
+可以获取几乎所有状态值，并将获得的值存储在用户定义的变量（第一个参数）中。
+
+*   指令语法
+    *   **vhost\_traffic\_status\_set\_by\_filter** _$variable_ _group_/_zone_/_name_
+
+```Nginx
+http {
+
+    geoip_country /usr/share/GeoIP/GeoIP.dat;
+
+    vhost_traffic_status_zone;
+    vhost_traffic_status_filter_by_set_key $geoip_country_code country::*;
+
+    ...
+    upstream backend {
+        10.10.10.11:80;
+        10.10.10.12:80;
+    }
+
+    server {
+
+        server_name example.org;
+
+        ...
+
+        vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;
+
+        vhost_traffic_status_set_by_filter $requestCounter server/example.org/requestCounter;
+        vhost_traffic_status_set_by_filter $requestCounterKR filter/country::example.org@KR/requestCounter;
+
+        location /backend {
+            vhost_traffic_status_set_by_filter $requestCounterB1 upstream@group/backend@10.10.10.11:80/requestCounter;
+            proxy_pass http://backend;
+        }
+    }
+}
+```
+
+以上设置如下：
+
+*   $requestCounter
+    *   serverZones -> example.org -> requestCounter
+*   $requestCounterKR
+    *   filterZones -> country::example.org -> KR -> requestCounter
+*   $requestCounterB1
+    *   upstreamZones -> backend -> 10.0.10.11:80 -> requestCounter
+
+请参见[vhost\_traffic\_status\_set\_by\_filter](https://blog.csdn.net/tobrainto/article/nginx-module-vts-all/#vhost_traffic_status_set_by_filter)指令以了解详细用法。
+
+### 11、JSON字段说明
+
+以下状态信息以JSON格式提供：
+
+#### 状态中使用的Json
+
+/_`{status_uri}`_/format/json
+
+/_`{status_uri}`_/control?cmd=status&…
+
+*   hostName
+    *   主机名。
+*   nginxVersion
+    *   nginx的版本。
+*   loadMsec
+    *   以毫秒为单位的处理时间。
+*   nowMsec
+    *   以毫秒为单位的当前时间
+*   connections
+    *   active
+        *   当前活动的客户端连接数。
+    *   reading
+        *   读取客户端连接的总数。
+    *   writing
+        *   写入客户端连接的总数。
+    *   waiting
+        *   正在等待的客户端连接总数。
+    *   accepted
+        *   接受的客户端连接总数。
+    *   handled
+        *   已处理的客户端连接总数
+    *   requests
+        *   请求请求的客户端连接总数。
+*   sharedZones
+    *   name
+        *   配置中指定的共享内存的名称。(默认值为：`vhost_traffic_status`)
+    *   maxSize
+        *   配置中指定的共享内存的最大大小的限制。
+    *   usedSize
+        *   共享内存的当前大小。
+    *   usedNode
+        *   共享内存中当前使用的节点数。可以通过以下公式获得一个节点的近似大小：（_usedSize_ / _usedNode_）
+*   serverZones
+    *   requestCounter
+        *   从客户端接收的客户端请求总数。
+    *   inBytes
+        *   从客户端接收的总字节数。
+    *   outBytes
+        *   发送到客户端的总字节数。
+    *   responses
+        *   1xx, 2xx, 3xx, 4xx, 5xx
+            *   状态代码为1xx、2xx、3xx、4xx和5xx的响应数。
+        *   miss
+            *   未命中的缓存数。
+        *   bypass
+            *   绕过缓存旁路数。
+        *   expired
+            *   过期的缓存数。
+        *   stale
+            *   失效缓存的数量。
+        *   updating
+            *   缓存更新的次数。
+        *   revalidated
+            *   重新验证的缓存数。
+        *   hit
+            *   缓存命中数。
+        *   scarce
+            *   未达缓存要求的请求次数。
+    *   requestMsecCounter
+        *   累积的请求处理时间（毫秒）。
+    *   requestMsec
+        *   请求处理时间的平均值（毫秒）。
+    *   requestMsecs
+        *   times
+            *   请求处理时间的时间（毫秒）。
+        *   msecs
+            *   请求处理时间的时间（毫秒）。
+    *   requestBuckets
+        *   msecs
+            *   由`vhost_traffic_status_histogram_buckets`指令设置的柱状图的桶的值.
+        *   counters
+            *   每个存储桶段值大于或等于对应请求处理时间的累积值。
+*   filterZones
+    *   它提供了与`serverZones`相同的字段，只是包含了组名。
+*   upstreamZones
+    *   server
+        *   server地址。
+    *   requestCounter
+        *   转发到此服务器的客户端连接总数。
+    *   inBytes
+        *   从该服务器接收的总字节数。
+    *   outBytes
+        *   发送到此服务器的总字节数。
+    *   responses
+        *   1xx, 2xx, 3xx, 4xx, 5xx
+            *   状态代码为1xx、2xx、3xx、4xx和5xx的响应数。
+    *   requestMsecCounter
+        *   包括upstream在内的累计请求处理时间数（毫秒）。
+    *   requestMsec
+        *   包括upstream在内请求处理时间的平均毫秒数。
+    *   requestMsecs
+        *   times
+            *   请求处理时间的时间（毫秒）。
+        *   msecs
+            *   包括upstream在内请求处理时间的时间（毫秒）。
+    *   requestBuckets
+        *   msecs
+            *   由`vhost_traffic_status_histogram_buckets`指令设置的直方图的bucket值。
+        *   counters
+            *   每个存储桶段值大于或等于对应请求处理时间（包括上游）的累积值。
+    *   responseMsecCounter
+        *   仅upstream响应处理时间累加值（毫秒）。
+    *   responseMsec
+        *   仅upstream响应处理时间平均值（毫秒）。
+    *   responseMsecs
+        *   times
+            *   请求处理时间（毫秒）。
+        *   msecs
+            *   仅upstream响应处理时间平均值（毫秒）。
+    *   responseBuckets
+        *   msecs
+            *   由`vhost_traffic_status_histogram_buckets`指令设置的柱状图的存储桶值。
+        *   counters
+            *   仅upstream响应处理时间大于或等于每个存储桶值的累计次数
+    *   weight
+        *   server的当前的`weight`设置。
+    *   maxFails
+        *   server的当前的`max_fails`设置。
+    *   failTimeout
+        *   server的当前的`fail_timeout`设置。
+    *   backup
+        *   server的当前的`backup`设置。
+    *   down
+        *   服务器的当前`down`设置。  
+            基本上，这只是[ngx\_http\_upstream\_module](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#server)的server关闭的标记（例如`server backend3.example.com down`），不是实际的upstream状态。  
+            如果启用了上游区域指令，它将变为实际状态。
+*   cacheZones
+    *   maxSize
+        *   配置中指定的最大缓存大小限制。
+    *   usedSize
+        *   当前缓存的大小。
+    *   inBytes
+        *   从缓存接收的字节总数。
+    *   outBytes
+        *   从缓存发送的字节总数。
+    *   responses
+        *   miss
+            *   未命中的缓存数。
+        *   bypass
+            *   绕过缓存旁路数。
+        *   expired
+            *   过期的缓存数。
+        *   stale
+            *   失效缓存的数量。
+        *   updating
+            *   缓存更新的次数。
+        *   revalidated
+            *   重新验证的缓存数。
+        *   hit
+            *   缓存命中数。
+        *   scarce
+            *   未达缓存要求的请求次数。
+
+#### Control中使用的Json
+
+/_`{status_uri}`_/control?cmd=reset&…
+
+/_`{status_uri}`_/control?cmd=delete&…
+
+*   processingReturn
+    *   The result of true or false.
+*   processingCommandString
+    *   The requested command string.
+*   processingGroupString
+    *   The requested group string.
+*   processingZoneString
+    *   The requested zone string.
+*   processingCounts
+    *   The actual processing number.

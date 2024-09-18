@@ -1,0 +1,25 @@
+## 1. helm install
+选择目标仓库的包，此处来自官方，在 rancher 直接进行安装
+## 2. 创建 ippool 并广播
+```
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: ip-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 10.8.100.1-10.8.100.250 # IP 池中定义的 IP 地址必须在节点所在的网络段范围内???(当你能访问节点的网段，定义在这个网段内时，desktop才能通过主机地址进行访问)
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: l2adver
+  namespace: metallb-system
+spec:
+  ipAddressPools: # 限定广播的地址，不配置将默认广播全部
+    - ip-pool  
+```
+这两个资源比较特殊，没有默认创建类型；选择导入 yaml 文件。UI 右上角选择导入，书写好文件，导入的同时选择正确的名称空间。导入后即正确创建，在左侧栏更多资源可以发现新增 `metallb.io`
+

@@ -1,0 +1,207 @@
+{
+  "recentFiles": [
+    {
+      "basename": "4.Kafka_exporter",
+      "path": "18_Observability/18_01_Metrics/18_01_02_VM/4.Kafka_exporter.md"
+    },
+    {
+      "basename": "0.Docker-compose 测试",
+      "path": "18_Observability/18_01_Metrics/18_01_02_VM/0.Docker-compose 测试.md"
+    },
+    {
+      "basename": "1.Python poetry",
+      "path": "17_Dev/1.Python poetry.md"
+    },
+    {
+      "basename": "1.云原生可观测性（Observability）",
+      "path": "18_Observability/1.云原生可观测性（Observability）.md"
+    },
+    {
+      "basename": "4.一些疑问",
+      "path": "18_Observability/4.一些疑问.md"
+    },
+    {
+      "basename": "index",
+      "path": "Webclip/clip/kubernetes-adm-HA-example/index.md"
+    },
+    {
+      "basename": "3.terraform-README",
+      "path": "17_Dev/3.terraform-README.md"
+    },
+    {
+      "basename": "2.Py基础",
+      "path": "17_Dev/2.Py基础.md"
+    },
+    {
+      "basename": "1.index",
+      "path": "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_05_vault/1.index.md"
+    },
+    {
+      "basename": "1.index",
+      "path": "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_04_rancher/1.index.md"
+    },
+    {
+      "basename": "1.index",
+      "path": "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_03_minio/1.index.md"
+    },
+    {
+      "basename": "1.index",
+      "path": "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_02_harbor/1.index.md"
+    },
+    {
+      "basename": "1.index",
+      "path": "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_01_flink/1.index.md"
+    },
+    {
+      "basename": "1.index",
+      "path": "12_Authorization/12_02_Authentik/12_02_01_examples/12_02_01_06_wikijs/1.index.md"
+    },
+    {
+      "basename": "2.添加 LDAP Source",
+      "path": "12_Authorization/12_02_Authentik/2.添加 LDAP Source.md"
+    },
+    {
+      "basename": "1.install",
+      "path": "12_Authorization/12_02_Authentik/1.install.md"
+    },
+    {
+      "basename": "1.Thanos",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/1.Thanos.md"
+    },
+    {
+      "basename": "2.server 批量安装（未书写完成）",
+      "path": "06_OperationSystem/2.server 批量安装（未书写完成）.md"
+    },
+    {
+      "basename": "2.MLNX 100G网卡驱动安装",
+      "path": "07_Hardware/2.MLNX 100G网卡驱动安装.md"
+    },
+    {
+      "basename": "7.确认监控字段",
+      "path": "05_Monitor(Duplicated)/05_02_Monitor visualization/7.确认监控字段.md"
+    },
+    {
+      "basename": "1.基础使用",
+      "path": "02_Kubernetes/02_03_Rancher/1.基础使用.md"
+    },
+    {
+      "basename": "9.authentik",
+      "path": "02_Kubernetes/02_03_Rancher/9.authentik.md"
+    },
+    {
+      "basename": "记录操作实现,以后多深究理论和原理",
+      "path": "记录操作实现,以后多深究理论和原理.md"
+    },
+    {
+      "basename": "3.mysql 使用案例问答",
+      "path": "01_Database/3.mysql 使用案例问答.md"
+    },
+    {
+      "basename": "1.Docker学习借鉴内容",
+      "path": "00_BasicResources/00_01_容器/1.Docker学习借鉴内容.md"
+    },
+    {
+      "basename": "Pasted image 20240711120528",
+      "path": "00_BasicResources/attachments/Pasted image 20240711120528.png"
+    },
+    {
+      "basename": "2.Tips",
+      "path": "00_BasicResources/2.Tips.md"
+    },
+    {
+      "basename": "1.clickhouse 集群",
+      "path": "01_Database/1.clickhouse 集群.md"
+    },
+    {
+      "basename": "1.单节点 docker 测试MinIO",
+      "path": "13_Software/1.单节点 docker 测试MinIO.md"
+    },
+    {
+      "basename": "5.longhorn",
+      "path": "02_Kubernetes/02_03_Rancher/5.longhorn.md"
+    },
+    {
+      "basename": "6.gitlab",
+      "path": "02_Kubernetes/02_03_Rancher/6.gitlab.md"
+    },
+    {
+      "basename": "4.Traefik",
+      "path": "02_Kubernetes/02_03_Rancher/4.Traefik.md"
+    },
+    {
+      "basename": "1.软件选型",
+      "path": "15_KnowledgeManagement/1.软件选型.md"
+    },
+    {
+      "basename": "1.Site 资源",
+      "path": "00_BasicResources/1.Site 资源.md"
+    },
+    {
+      "basename": "2.Data Version Control",
+      "path": "10_VersionControl/2.Data Version Control.md"
+    },
+    {
+      "basename": "redis-exporter",
+      "path": "05_Monitor(Duplicated)/05_01_Metrics/VM/redis-exporter.md"
+    },
+    {
+      "basename": "kafka_exporter",
+      "path": "05_Monitor(Duplicated)/05_01_Metrics/VM/kafka_exporter.md"
+    },
+    {
+      "basename": "4.nginx-vts 模块动态新增",
+      "path": "05_Monitor(Duplicated)/05_01_Metrics/05_01_02_nginx-vts/4.nginx-vts 模块动态新增.md"
+    },
+    {
+      "basename": "3.index4",
+      "path": "05_Monitor(Duplicated)/05_01_Metrics/05_01_02_nginx-vts/3.index4.md"
+    },
+    {
+      "basename": "1712828415-32cd6b5719fb0fbfcb6878263f8bc9f6",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-32cd6b5719fb0fbfcb6878263f8bc9f6.png"
+    },
+    {
+      "basename": "1712828415-ec0c2f5d697e0e743d7da89686b13773",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-ec0c2f5d697e0e743d7da89686b13773.avif"
+    },
+    {
+      "basename": "1712828415-f1c0f13dac5751c2b6c49294b5b1620c",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-f1c0f13dac5751c2b6c49294b5b1620c.png"
+    },
+    {
+      "basename": "1712828415-d0b8d912147b1cff36b42b05c1a79b7a",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-d0b8d912147b1cff36b42b05c1a79b7a.avif"
+    },
+    {
+      "basename": "1712828415-aeff54f709cb0c15ffee93c14b09b90b",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-aeff54f709cb0c15ffee93c14b09b90b.png"
+    },
+    {
+      "basename": "1712828415-555556fb1c34de45bfa45cb324de7ce2",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-555556fb1c34de45bfa45cb324de7ce2.avif"
+    },
+    {
+      "basename": "1712828415-6597d40d536745151672cdf6a239b17a",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-6597d40d536745151672cdf6a239b17a.webp"
+    },
+    {
+      "basename": "1712828415-999c8ae9ba3eaa4a4dfcafb64feb9c25",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-999c8ae9ba3eaa4a4dfcafb64feb9c25.webp"
+    },
+    {
+      "basename": "1712828415-63f1f1aa2305d1b9b115570d2b9e9e56",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-63f1f1aa2305d1b9b115570d2b9e9e56.avif"
+    },
+    {
+      "basename": "1712828415-4e3d6f3ca101827a0f802d85f01f6be6",
+      "path": "05_Monitor(Duplicated)/05_03_Prom HA/attachments/1712828415-4e3d6f3ca101827a0f802d85f01f6be6.avif"
+    },
+    {
+      "basename": "8.win 安装",
+      "path": "07_Hardware/8.win 安装.md"
+    }
+  ],
+  "omittedPaths": [],
+  "maxLength": null,
+  "openType": "tab"
+}

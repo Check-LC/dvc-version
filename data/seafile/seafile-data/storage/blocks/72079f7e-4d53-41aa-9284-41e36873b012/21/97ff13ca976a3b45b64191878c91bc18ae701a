@@ -1,0 +1,25 @@
+# gitlab
+
+1. 思路：指标暴露之后通过集群内的 prom 的服务自动发现，收集指标，kube-prometheus 作为物理 prom 的联邦配置之一
+2. 组件：
+
+   gitlab-exporter: 这个组件是默认开启的; 其他 subchart enable metrics 之后将能够根据配置的自动发现获取指标; 本身 chart 中的 service monitor 在此时可以选择不开启。 
+
+   数据库： pg+redis 在 gitlab 的 chart 中安装，没有使用外部的，可以收集到数据
+
+   minIO charts 没有指标可以得到暴露
+3. values.yaml 主要修改内容
+
+   ```yaml
+   global:
+     monitoring:
+       enabled: true
+   
+   # 其他的有关的 subchart 如果需要安装，不使用外部已经部署的服务，可以在开启安装的同时开启其中的 metrics; 集群中的 prom 将可以自动发现
+   # 第一层新增，如果不写在这个层级将打乱文件的value值映射，使得部署失败
+   
+   minio:
+     persistence:
+       storageClass: longhorn
+   ```
+

@@ -1,0 +1,57 @@
+```
+ports:
+  metrics:
+    expose: false
+    exposeInternal: true #暴露在集群内，可以在ingreeroute中书写使用 TraefikService
+    exposedPort: 9100
+    port: 9100
+```
+
+- 配置 expose: true 可以使得客户端访问 traefik 的 metrics 于 http://load_balancer_ip:9100/metrics
+- 为 dashboard 的 ingressroute
+```
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-http-ingressroute
+  namespace: ingress-system
+spec:
+  entryPoints:
+  - web  # helm values 中修改此处，以及 matchrule，与此段配置一致即可
+  routes:
+  - kind: Rule
+    match: Host(`traefik.testlab.net`) # 这两条 matchrule 都可以
+    # match: Host(`traefik.testlab.net`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    services:
+    - kind: TraefikService
+      name: api@internal
+```
+- 为 metrics添加 ingressroute 资源，访问 ( http://traefik.testlab.net/metrics )
+```
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-metrics
+  namespace: ingress-system
+# 这是expose: true exposeInternal: false
+spec:
+  entryPoints:
+  - web # 因为只将这个暴露在集群外了
+  routes:
+  - match: Host(`traefik.testlab.net`) && Path(`/metrics`)
+    kind: Rule
+    services:
+    - name: traefik
+      port: 9100
+# 这是expose: false ; exposeInternal: true
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`traefik.testlab.net`) && Path(`/metrics`)
+      services:
+        - kind: TraefikService
+          name: prometheus@internal # 此处的名称在 dashboard 看到的
+
+```

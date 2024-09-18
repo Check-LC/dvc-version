@@ -1,0 +1,120 @@
+# DevOps的10个Kubernetes的Operators
+
+Kubernetes和容器技术的出现使应用程序更具可移植性，可扩展性，同时也提高了资源利用率。对于DevOps而言，Kubernetes具有更广泛的吸引力：能够大规模配置，管理和操作容器化微服务。
+
+同时Kubernetes也允许他们在应用程序的创建，部署，扩展和配置中实现一定程度的自动化，从而大大降低了程序管理的开销以及错误。
+
+但是，有一点需要注意：对于有状态应用程序，它可能并没有我们所希望的那么完美。部署，扩容，操作和配置有状态的应用程序以及在自动化中进行构建需要DevOps大量的交互。
+
+## **什么是Kubernetes Operators?**
+
+Kubernetes Operators是在Kubernetes集群上构建和驱动每个应用程序的高级原生方法。通过与Kubernetes API的密切合作，它提供了一种一致的方法来自动处理所有应用程序操作流程，而无需任何人工响应。
+
+换句话说，Operator是打包，运行和管理Kubernetes应用程序的一种方式。
+
+Kubernetes Operators使在Kubernetes上创建，配置和管理这些应用程序更加容易。
+
+很多Operators还扩展了整个应用程序生命周期，从而使执行操作任务(例如扩展，升级，备份和恢复复杂的有状态应用程序)更加容易。
+
+由于它们使用和扩展了Kubernetes API，因此它们紧密集成在Kubernetes框架中。
+
+以下是Kubernetes Operators的一些最常见功能的列表：
+
+*   使用配置项和副本数安装应用程序。
+*   弹性伸缩应用程序
+*   启动升级，自动备份和故障恢复
+*   以代码的方式执行管理任务
+
+## **Kubernetes Operators如何工作?**
+
+Operators利用Kubernetes的可扩展性和模块化来自动化创建，配置和管理Kubernetes应用程序。
+
+Operators基于自定义Kubernetes控制器(CRD)和自定义资源的概念，并被DevOps用于在Kubernetes上管理应用程序。它们对CRD起作用，以确保群集的实际状态与CRD中定义的状态匹配。
+
+来自CoreOs的prometheus Operator就是一个很好的例子。它被部署为自定义Kubernetes控制器，该控制器监视Kubernetes API的四个自定义资源定义：Prometheus，ServiceMonitor，PrometheusRule和AlertManager。
+
+部署后，Prometheus Operator将安装并配置完整的Prometheus Stack，其中包括Prometheus服务器，Alertmanager，Grafana，主机node\_exporter和kube-state-metrics。然后，DevOps可以轻松扩展每个组件的单个副本的数量，进行配置更改，更新警报规则或自动监视新服务。
+
+现在我们已经介绍了Kubernetes Operators的概念，让我们介绍DevOps最常用的一些Operators。
+
+## **External Secrets Operators**
+
+External Secrets Operator 是一个 Kubernetes Operator，它集成了外部密钥管理系统， 例如 [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/)、[HashiCorp Vault](https://www.vaultproject.io/)、Google Secrets Manager、Azure Key Vault 等等。 他使用外部密钥管理服务的 API 读取信息并自动将值注入 Kubernetes Secret。
+
+## **RBAC Manager Operator**
+
+RBAC Manager(https://github.com/FairwindsOps/rbac-manager)是一个来自费尔温茨的kubernetns Operator，它旨在使RBAC上Kubernetes易于安装，配置和管理。
+
+Kubernetes授权通常是复杂，重复，需要大量的手动配置并且很难扩展。RBAC Manager大大减少了管理RBAC以及创建，删除或更新角色绑定，群集角色绑定和服务帐户所涉及的配置。
+
+通过汇总单个RBAC定义文件中的多个命名空间之间的角色绑定，它可以作为了解RBAC状态的唯一事实来源。
+
+## **HPA Kubernetes Operator**
+
+Banzai的HPA Operator(https://github.com/banzaicloud/hpa-Operator)是另一种有用的Operator，它将Pod自动缩放功能添加到Helm charts中。
+
+它监视Kubernetes deployment或StatefulSet，并根据配置中定义的注释自动创建，删除或更新“Horizontal Pod Autoscalers ”(HPA)。HPA的Github页面以Kafka为例。
+
+Kafka的Helm charts并没有为集群定义任何的HPA规则，这意味着使用该helm chart 部署Kafka并不会在Kafka中实现HPA。
+
+为了确保将HPA作为为Helm chart的一部分，DevOps可以为min和maxReplicas添加注释。添加后，HPA Operator将根据注释增加所需数量的HPA副本。HPA Operator还采用了Kube Metrics Adapter公开的基于Prometheus的自定义指标。
+
+## **Cert-manager Kubernetes Operator**
+
+Cert-manager Operator(https://github.com/jetstack/cert-manager)是来自与Jetstack的Kubernetes Operator。它旨在自动化TLS证书的管理和颁发。
+
+DevOps可以使用此Operator来自动执行重复性任务，例如确保证书有效，最新以及正确更新。部署后，Cert-manager将作为Kubernetes deployment运行。
+
+DevOps可以将证书和证书颁发者列表配置为Kubernetes CRD。一旦配置了证书，应用程序就可以使用信任的证书进行即时请求。
+
+## **ArgoCD Operator**
+
+ArgoCD Operator(https://github.com/jmckind/argocd-Operator)管理ArgoCD的整个生命周期以及其相关组件。ArgoCD是CNCF领域中评价最高的专门针对Kubernetes持续交付工具之一。
+
+该Operator可以轻松配置和安装ArgoCD，也可以轻松升级，备份，还原和扩展ArgoCD组件。该Operator通过监测三个Kubernetes CRD来做到这一点，其中包括ArgoCD(定义ArgoCD集群的所需状态)和ArgoCDExport(定义用于ArgoCD组件导出和恢复的所需状态)。
+
+## **Istio Operator**
+
+Istio(https://istio.io/)是服务网格工具，可以管理，协调，保护和监视Kubernetes上部署的微服务之间的通信。Istio Operator(https://istio.io/blog/2019/introducing-istio-Operator/)可以更容易地安装，升级以及对Istio的故障排除。
+
+安装仅需要istioctl作为前提条件，因为它们不需要更改API，并且可以轻松实现特定于版本的升级hooks。使用该Operator安装Istio还可以确保所有API字段都经过验证。
+
+该OperatorAPI支持所有6种内置安装配置文件，包括默认，演示，最小和远程。DevOps和SRE可以从其中任何一种开始，然后进一步进行配置更改，以根据其特定需求定制服务网格。
+
+## **Etcd Operator**
+
+Etcd充当Kubernetes上所有集群数据的存储数据库，因此是每个集群的最关键组件的组件之一。在Kubernetes上管理和配置etcd集群是一项相对耗时的工作，需要一些手工配置的工作，从而为保证etcd 集群的高可用，可监控和灾难恢复增加了复杂度。
+
+ETCD Operator(https://coreos.com/Operators/etcd/docs/latest/)帮助DevOps和SRE更容易创建，配置和管理Kubernetes集群中etcd实例。
+
+团队可以轻松启动多个高度可用的etcd实例，而无需指定详细的配置设置，修改群集规格以调整群集的大小，配置用于灾难恢复的自动备份策略以及启动正常升级而无需停机。
+
+## **Elastic Cloud on Kubernetes (Elastic Kubernetes Operator)**
+
+Kubernetes上的Elastic cloud(ECK)(https://github.com/elastic/cloud-on-k8s)是elastic.co的Kubernetes官方Operator，旨在为在Kubernetes上部署，管理和操作整个Elastic Stack提供无缝的体验。除了更轻松地在Kubernetes上部署elastic search和Kibana之外，它还简化了关键操作任务，包括管理和监视多个集群，启动正常升级，扩展集群容量和本地存储，进行配置更改以及备份。
+
+默认的ECK分发是免费和开源的，有内置功能，包括用于密集存储，Kibana空间，Canvas和Elastic Maps的frozen indices，还支持监控Kubernetes日志和基础架构。
+
+## **Grafana Operator**
+
+RedHat提供的Grafana Operator(https://github.com/integr8ly/grafana-Operator)简化了在Kubernetes上创建，配置和管理Grafana实例的过程。
+
+除了帮助部署Grafana之外，它还支持通过ingress，自动化的dashboard和数据源发现以及仪表板依赖项的安装使Grafana变的高度可用。可以使用Ansible或通过kubectl命令手动安装Operator并创建自定义资源。
+
+安装后，Operator将根据部署期间传递的标志在其自身的名称空间或所有名称空间中监视仪表板定义，发现仪表板，在出现任何无效json的情况下将错误消息添加到仪表板的状态字段中，并自动安装指定的插件。
+
+然后，DevOps和SRE可以在GrafanaDataSource中添加数据源以及其他配置文件。
+
+## **Jaeger Kubernetes Operator**
+
+Jaeger Kubernetes Operator(https://github.com/jaegertracing/jaeger-Operator)帮助部署，管理和配置Jaeger实例。安装DevOps和SRE时，可以为jaeger指定配置选项，包括存储选项，派生依赖项，注入Jaeger代理sidecar和UI配置等。
+
+安装完成后，可使用Operator来创建Jaeger实例并将其与部署策略相关联。DevOps和SRE可以选择以下支持的三种部署策略：allInOne，production和streaming。使用production策略时，Operator将启动一个更具可扩展性和高可用性的环境，并分别部署每个后端组件。
+
+allInOne策略旨在用于测试和开发目的，而streaming策略则增强了production策略，并在收集器和后端存储之间提供了流。
+
+## **MongoDB Enterprise Kubernetes Operator**
+
+MongoDB Operator( https://docs.mongodb.com/manual/reference/Operator/ )帮助 DevOps 标准化创建大规模的 MongoDB 集群的过程。该 Operator 可以接管拆分和管理 MongoDB 集群所涉及的典型管理任务，包括配置存储和计算，配置网络连接和设置用户。
+
+Kubernetes Operator 还集成了其他 MongoDB 管理工具，例如 MongoDB Ops Manager 和 MongoDB Cloud Manager，以提供备份，监视和性能优化。

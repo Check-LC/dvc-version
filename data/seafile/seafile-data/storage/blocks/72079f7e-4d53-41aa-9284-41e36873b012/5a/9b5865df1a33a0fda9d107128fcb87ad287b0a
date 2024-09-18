@@ -1,0 +1,50 @@
+## 1. 介绍
+Conda 是一个可在 Linux、macOS 和 Windows 上运行的开源软件包管理和环境管理系统。Conda 可快速安装、运行和升级软件包及其依赖包。Conda 可在本地计算机上轻松地进行创建、保存、加载和切换环境。它是为 Python 程序创建的，但是也可以打包和分发适用于任何语言的软件。
+
+Conda 作为软件包管理器，可以帮助用户查找和安装软件包。如果用户需要一个使用其他版本的 Python 的软件包，无需切换到其他环境管理器，因为 Conda 也是环境管理器，仅需几个命令，用户就可以设置一个完全独立的环境来运行该不同版本的 Python，同时继续在正常环境中运行用户通常的 Python 版本。
+## 2. 安装
+在桌面快捷键 `Alt+Ctrl+t` 唤醒 ` bash ` 终端；在命令行终端执行命令安装 conda 和其依赖。\
+复制以下命令并回车执行即可，保证格式一致。
+```Bash
+sudo apt-get update && sudo apt-get install -y  zlib1g-dev git curl libjson-pp-perl \
+&& wget --quiet  "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh" -O /tmp/miniconda.sh \
+&& /bin/bash /tmp/miniconda.sh -b -u -p $HOME/anaconda3 \
+&& $HOME/anaconda3/bin/conda init \
+&& echo 'export PATH=$HOME/anaconda3/bin:$PATH'  >>   $HOME/.bashrc  \
+&& rm -f /tmp/miniconda.sh \
+&& $HOME/anaconda3/bin/conda install -y libgcc python=3.8.12 \
+&& $HOME/anaconda3/bin/conda clean --all -y
+```
+### 2.1 常用命令介绍
+```bash
+conda list                       # 查看安装了哪些包
+conda env list                   # 查看当前存在哪些虚拟环境
+conda create -n env4test         # 创建一个名为env4test的虚拟环境
+source activate env4test         # 激活虚拟环境env4test
+conda deactivate                 # 退出虚拟环境
+conda search bwa -c bioconda     # 查找名为bwa的包，并指定bioconda源
+conda install bwa -c bioconda -n env4test # 指定从bioconda源中下载安装bwa，安装在env4test虚拟环境中
+conda remove -n env4test bwa     # 删除虚拟环境中的bwa包
+conda remove -n env4test --all   # 删除虚拟环境env4test(包括其中的所有的包)
+```
+## 3. 环境配置示例
+### 3.1 进入 VScode
+桌面进入资源管理器，选择目标工作目录，右键唤起打开选项，选择指定应用打开此路径。
+![](attachments/conda-01.png)
+使用 VScode 打开文件夹。
+![](attachments/conda-02.png)
+### 3.2 新建终端
+依次按照指引选择即可创建终端，执行后续命令（此时为 ` base ` 环境）。
+![](attachments/conda-03.png)
+### 3.3 新建目标环境
+在当前路径下新建目标环境，eg：swfactor_env\
+`conda create -n swfactor_env python=3.8.12`
+### 3.4 激活虚拟环境
+```bash
+conda env list                   # 查看当前存在哪些虚拟环境
+source activate swfactor_env         # 激活虚拟环境
+```
+### 3.5 软件包安装
+```bash  TI:"示例命令格式"
+conda install -y  numpy==1.24.3
+```

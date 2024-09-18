@@ -1,0 +1,52 @@
+
+
+# vault - inboc
+
+vault
+
+[Xie Jian 已更新 大约 2 小时前](https://outline.inboc.net/doc/vault-ewb3okfTL3/history)  • [被浏览 2 用户](https://outline.inboc.net/doc/vault-ewb3okfTL3/insights)
+
+1、创建一个 OAuth2/OpenID Provider
+
+![](assets/1713432796-b2b0e60403f4cdc8412b68158ed9e2b0.png)
+
+注意：`Advanced protocol settings` 中的 `Subject mode` 选择 `Based on the User's username`，如果保持默认，那么当用户登录后显示将不是用户名，而是用户的哈希ID。
+
+  
+
+2、创建一个 Application
+
+![](assets/1713432796-c7f2853d0a2c16fe21ceb656f764c924.png)
+
+3、配置 vault
+
+配置 oidc 身份验证方法，oidc 发现 url 即为提供程序中的 OpenID 配置发行程序
+
+```plain
+
+vault write auth/oidc/config \
+         oidc_discovery_url="https://authentik.inboc.top/application/o/vault-slug/" \
+         oidc_client_id="mMFfsGbHYdQPiQEN8ZQoT1Aca1vwExnjje4s94bi" \
+         oidc_client_secret="Qz3Z9LTo2S4FTHe5NfWrLmI6GJFYEFca85JkcFqCFbj7TGNuMN24kVtQwN8shGkfwh9GxnO1jS4hHIlJe8Mk9rp8VDdEg66hEhlPG86RNgxnlEvTkDF12WGF7sbUOwgL" \
+         default_role="reader"
+```
+
+创建reader role
+
+```plain
+
+vault write auth/oidc/role/reader \
+      bound_audiences="mMFfsGbHYdQPiQEN8ZQoT1Aca1vwExnjje4s94bi" \
+      allowed_redirect_uris="https://sys-vault.inboc.top/ui/vault/auth/oidc/oidc/callback" \
+      allowed_redirect_uris="https://sys-vault.inboc.top/oidc/callback" \
+      user_claim="sub" \
+      policies="reader"
+```
+
+4、使用 oidc 登录
+
+![](assets/1713432796-2cbe2e3e8c38781d3111a9a473b662b7.png)
+
+[反向链接](#backlinks)
+
+[7\. 项目配置](https://outline.inboc.net/doc/7-Y6TGY95RO9#d-ewb3okfTL3)

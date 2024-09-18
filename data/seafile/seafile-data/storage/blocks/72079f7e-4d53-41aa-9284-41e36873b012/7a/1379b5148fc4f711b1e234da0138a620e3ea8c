@@ -1,0 +1,139 @@
+## 1. 使用教程安装驱动
+ - 现象：使用官方文档操作，其中报错出现某些安装包未安装、并且会自动停止脚本。
+ - 尝试：执行脚本时进行选项设置--skip-repo、以及离线安装提示的软件包，仍然会出现相同报错（脚本的这部分作用好像是设置为本地repo，不影响驱动程序发挥作用）。
+  - 解决：在执行脚本后直接进入下一步指导的操作，最终进行检查安装成功。（确认是否是在有网络的环境下实现的）
+  - 离线源:[制作](https://blog.csdn.net/qq_41037945/article/details/124440867)（如果必需安装这些包，便使用这个本地源）
+## 2. 制作离线源（两种包和依赖的下载方式）
+### 2.1
+```shell
+#!/bin/bash
+[[准备离线软件源的相关包和依赖]]
+
+# 要创建的目录名称列表
+directories=("autoconf" "autotools-dev" "automake" "debhelper" "pkg-config" "build-essential" "make" "quilt" "chrpath" "dh-autoreconf" "gcc" 
+  "gfortran" "libgfortran5" "lsof" "dkms" "m4" "libn1-3-dev" "libltdl-dev" "libnumal" "libc6-dev" "tcl" "libn1-3-200" "swig"
+  "libn1-route-3-200" "graphviz" "bison" "libn1-route-3-dev" "libfuse2" "tk" ) # "bzip2" "flex"
+
+# 循环创建目录
+for directory_name in "${directories[@]}"
+do
+    # 创建目录
+    [[mkdir]] "$directory_name"
+    
+    apt-get download $(apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances "$directory_name" | grep "^\w" | sort -u)
+   rm -f /home/chao.long/Desktop/offlineapt/*i386.deb
+   mv /home/chao.long/Desktop/offlineapt/*.deb /home/chao.long/Desktop/offlineapt/"$directory_name"
+   
+done
+```
+
+### 2.2
+```shell
+#!/bin/bash
+[[准备离线软件源的包和依赖]]
+
+# 要创建的目录名称列表
+directories=("autoconf" "bzip2" "autotools-dev" "automake" "debhelper" "pkg-config" "build-essential" "make" "quilt" "chrpath" "dh-autoreconf" "gcc" 
+  "gfortran" "libgfortran5" "lsof" "dkms" "m4" "libn1-3-dev" "libltdl-dev" "libnumal" "libc6-dev" "tcl" "libn1-3-200" "swig"
+  "libn1-route-3-200" "graphviz" "bison" "libn1-route-3-dev" "libfuse2" "tk" "flex")
+
+# 循环创建目录
+for directory_name in "${directories[@]}"
+do
+    # 创建目录
+    mkdir "$directory_name"
+    
+    echo -e "\n" | /home/chao.long/Desktop/deb/getdepends.sh  "$directory_name" 
+  
+    mv /home/chao.long/Desktop/deb/*.deb /home/chao.long/Desktop/deb/"$directory_name"
+done
+```
+- getdepends.sh
+```shell
+#!/bin/bash
+ export MAXPARAMETERS=255
+
+ function array_contains_find_index() {
+     local n=$#
+     local i=0
+     local value=${!n}
+
+     for (( i=1; i < n; i++ )) {
+         if [ "${!i}" == "${value}" ]; then
+             echo "REMOVING $i: ${!i} = ${value}"
+             return $i
+         fi
+     }
+     return $MAXPARAMETERS
+ }
+
+ LIST=( $( apt-rdepends $1 | grep -v "^ " ) )
+ echo ${LIST[*]}
+ read -n1 -r -p "... Packages that will be downloaded (Continue or CTRL+C) ..."
+
+ RESULTS=( $( apt-get download ${LIST[*]} |& cut -d' ' -f 8 ) )
+ LISTLEN=${#LIST[@]}
+
+ while [ ${#RESULTS[@]} -gt 0 ]; do
+     for (( i=0; i < $LISTLEN; i++ )); do
+         array_contains_find_index ${RESULTS[@]} ${LIST[$i]}
+         ret=$?
+
+         if (( $ret != $MAXPARAMETERS )); then
+             unset LIST[$i]
+         fi
+     done
+
+     FULLRESULTS=$( apt-get download ${LIST[*]} 2>&1  )
+     RESULTS=( $( echo $FULLRESULTS |& cut -d' ' -f 11 | sed -r "s/'(.*?):(.*$)/\1/g" ) )
+ done
+
+ apt-get download ${LIST[*]}
+```
+## 3. 根据下载的包制作源
+
+### 3.1 以上所有包和依赖存放到汇总路径 
+```
+ls | wc -l
+     307
+cd  /path/with/allpackages
+dpkg-scanpackages packages /dev/null | gzip > packages/Packages.gz
+#  创建索引的命令 、 这个汇总路径的当前位置（相对路径） /dev/null | 压缩 并 重定向索引文件的存储位置
+```
+
+### 3.2 更新仓库
+```
+vim sources.list
+    deb   [trusted=yes]   file:///media/chao.long/Ventoy   ALL/
+                                 # 此处是存包的父级目录  + 具体的包的存放目录
+sudo apt update
+```
+
+### 3.3 问题
+- describe：
+```
+Get:3 file:/media/chao.long/Ventoy ALL/ Packages
+Err:3 file:/media/chao.long/Ventoy ALL/ Packages
+File not found - /media/chao.long/Ventoy/ALL/Packages (2: No such file or directory)
+Reading package lists... Done
+N: Download is performed unsandboxed as root as file '/media/chao.long/Ventoy/ALL/InRelease' couldn't be accessed by user '_apt'. - pkgAcquire::Run (13: Permission denied)
+E: Failed to fetch file:/media/chao.long/Ventoy/ALL/Packages  File not found - /media/chao.long/Ventoy/ALL/Packages (2: No such file or directory)
+E: Some index files failed to download. They have been ignored, or old ones used instead
+```
+- 解决：指定的本地源的路径存在访问权限（user：_apt）
+- describe：仓库不被信任
+```
+Err:2 file: /home/controller/Desktop/system/local-sources/packages/ InRelease
+	File not found - xxx
+Release (2: No such file or directory)
+E: The respository 'file: /home/xxx/.../packages/ Release' does not have a Release file.
+N: Updating from such a repository cant be done securely, and is therefore disabled by default.
+```
+- 解决
+```
+apt-get update ---allow-insecure-repositories   [[需要有]] dpkg-dev
+apt install xxxx --allow-unauthenticated
+```
+
+
+![no]

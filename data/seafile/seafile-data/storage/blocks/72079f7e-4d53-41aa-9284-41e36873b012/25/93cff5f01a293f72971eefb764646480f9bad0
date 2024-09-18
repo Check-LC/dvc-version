@@ -1,0 +1,38 @@
+## docker-compose 测试安装
+```
+version: '3.9'
+services:
+  nexus:
+    image: sonatype/nexus3:3.65.0
+    container_name: nexus
+    restart: always
+    ports:
+      - 10240:8081
+```
+
+## 暴露应用指标
+### 用户授权
+1. 创建用于指标暴露的 role，并赋予 metrics-all 的特权，在 filter 中可以通过 'metrics' 可以快速定位预设权限
+![](attachments/nexus-metrics-role.png)
+
+2. 创建用户
+选择创建本地用户
+![](attachments/nexus-metrics-user1.png)
+
+用户创建中的信息：使用 ID 作为登录名，确保已经记住密码，关联上一步创建的 role----nx-metrics
+![](attachments/nexus-metrics-user2.png)
+
+## Prometheus scrape_configs
+```yaml
+  - job_name: 'nexus'
+    metrics_path: /service/metrics/prometheus
+    scheme: http
+    basic_auth:
+      username: 'metrics'
+      password: 'metrics'
+    static_configs:
+      - targets:
+        - 10.1.0.81:10240
+```
+
+`curl -X POST http://10.1.0.81:9090/-/reload`

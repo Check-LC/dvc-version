@@ -1,0 +1,19 @@
+0 . mac mini with T2 [Guides](https://t2linux.org/)
+
+1 . 准备:
+	Ethcer
+	[镜像](https://github.com/t2linux/T2-Ubuntu/releases)
+
+2 . 安全启动限制外部磁盘启动,需要关闭
+3 . 开机 按键 (ALT) 进入启动选项,选择uefi(最右一般为最新)
+
+
+## OQO
+硬件 : i686 32位  1G 32G 
+尝试多种linux系统，多种发行版，均不成功，主要报错输出是（虚假响应）反馈的安装不成功，安装后不显示任何内容，或者是 不识别引导盘
+[安装 debian6.img](https://cdimage.debian.org/mirror/cdimage/archive/6.0.1-live/i386/usb-hdd/debian-live-6.0.1-i386-gnome-desktop.img)-+
+
+## Fujitsu
+硬件： x86 32位 安装 lubuntu
+
+

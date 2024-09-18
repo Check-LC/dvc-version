@@ -1,0 +1,14 @@
+variable "projects_info" {
+  description = "Map of projects and their namespaces"
+  type = map(object({
+    namespace             = list(string)
+    role_template_binding = optional(map(string))
+  }))
+  default = {}
+}
+
+variable "cluster_v1_id" {
+  description = "target cluster v1 id"
+  type        = string
+  default     = ""
+}

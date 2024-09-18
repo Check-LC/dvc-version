@@ -1,0 +1,81 @@
+{
+  "confirmDeletion": true,
+  "showAddCommand": true,
+  "debug": false,
+  "editorMenu": [],
+  "fileMenu": [],
+  "leftRibbon": [],
+  "rightRibbon": [],
+  "titleBar": [],
+  "statusBar": [],
+  "pageHeader": [
+    {
+      "id": "obsidian-kanban:create-new-kanban-board",
+      "icon": "box",
+      "name": "Kanban: 创建新看板",
+      "mode": "any"
+    },
+    {
+      "id": "workspace:split-vertical",
+      "icon": "lucide-separator-vertical",
+      "name": "左右分屏",
+      "mode": "any"
+    }
+  ],
+  "macros": [
+    {
+      "macro": [
+        {
+          "action": 0,
+          "commandId": "obsidian-style-settings:show-style-settings-leaf"
+        },
+        {
+          "action": 1,
+          "delay": "50"
+        },
+        {
+          "action": 0,
+          "commandId": "obsidian-hover-editor:convert-active-pane-to-popover"
+        }
+      ],
+      "name": "style setting 悬浮",
+      "icon": "star",
+      "startup": false
+    },
+    {
+      "macro": [
+        {
+          "action": 0,
+          "commandId": "keyboard-analyzer:show-shortcuts-analyzer-view"
+        },
+        {
+          "action": 1,
+          "delay": "50"
+        },
+        {
+          "action": 0,
+          "commandId": "obsidian-hover-editor:convert-active-pane-to-popover"
+        }
+      ],
+      "name": "keyboard analyzer 悬浮",
+      "icon": "star",
+      "startup": false
+    }
+  ],
+  "explorer": [],
+  "hide": {
+    "statusbar": [],
+    "leftRibbon": []
+  },
+  "spacing": 8,
+  "advancedToolbar": {
+    "rowHeight": 48,
+    "rowCount": 1,
+    "spacing": 0,
+    "buttonWidth": 48,
+    "columnLayout": false,
+    "mappedIcons": [],
+    "tooltips": false,
+    "heightOffset": 0
+  }
+}

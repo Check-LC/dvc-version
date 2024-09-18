@@ -1,0 +1,47 @@
+# 1. 在线阅读
+<iframe 
+    height=600
+    width='100%'
+    src='https://www.bookstack.cn'
+    allowfullscreen></iframe>
+
+# 2. [linux command manpage](https://www.mankier.com/)  
+ <iframe
+    border=1
+    frameborder=1
+    width='100%'
+    height=600
+    src='https://www.mankier.com/'  allowfullscreen  
+></iframe>
+
+# 3. [Devops Roadmap](https://gitbook.curiouser.top/) 
+<iframe
+    width='100%'
+    height=600
+    allowfullscreen
+    src='https://gitbook.curiouser.top/'   
+></iframe>
+
+# 4. [咖啡吧](https://ops-coffee.cn/knowledge) 
+<iframe
+    width='100%'
+    height=600
+    allowfullscreen
+    src='https://ops-coffee.cn/knowledge'
+></iframe>
+
+# 5. [云原生资料库 (jimmysong.io)](https://lib.jimmysong.io/) 
+<iframe
+        height=600
+        width='100%'
+        allowfullscreen
+        src='https://lib.jimmysong.io/'
+></iframe>
+
+# 6. 二丫讲梵 
+<iframe
+        height=600
+        width='100%'
+        src='https://wiki.eryajf.net/'
+></iframe>
+

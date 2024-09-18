@@ -1,0 +1,18 @@
+resource "rancher2_namespace" "cluster_namespace" {
+  for_each = {
+    for item in flatten([
+      for project_name, project_detail in var.projects_info : [
+        for namespace_name in project_detail.namespace : {
+          key            = namespace_name
+          project_name   = project_name
+          namespace_name = namespace_name
+        }
+      ]
+    ]) : item.key => item
+  }
+
+  name             = each.value.namespace_name
+  project_id       = rancher2_project.cluster_project[each.value.project_name].id
+  wait_for_cluster = true
+  depends_on       = [rancher2_project.cluster_project]
+}

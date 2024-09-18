@@ -1,0 +1,123 @@
+## 一、 介绍
+VictoriaMetrics是一个新兴的监控解决方案。它借助Prometheus强大的exporter生态、成熟的规范、服务发现等优点等，融入到Prometheus生态中。VictoriaMetrics官网很多兼容Prometheus参数解释都是直接跳转到Prometheus官网。因为VictoriaMetrics基本支持Prometheus配置文件、PromQL、各类API、数据格式等等。VictoriaMetrics也可以完全取代Prometheus。
+
+VictoriaMetrics可以作为Prometheus的长期[远程存储方案](https://www.cnblogs.com/punchlinux/p/17047975.html#_label3)。
+
+>[来源](https://docs.youdianzhishi.com/prometheus/victoriametrics/overview/)
+>Thanos 方案也可以用来解决 Prometheus 的高可用和远程存储的问题，那么为什么我们还要使用 VictoriaMetrics 呢？相对于 Thanos，VictoriaMetrics 主要是一个可水平扩容的**本地全量持久化存储方案**，VictoriaMetrics 不仅仅是时序数据库，它的优势主要体现在一下几点。
+- 对外支持 Prometheus 相关的 API，可以直接用于 Grafana 作为 Prometheus 数据源使用
+- 指标数据摄取和查询具备高性能和良好的可扩展性，性能比 InfluxDB 和 TimescaleDB 高出 20 倍  
+- 在处理高基数时间序列时，内存方面也做了优化，比 InfluxDB 少 10x 倍，比 Prometheus、Thanos 或 Cortex 少 7 倍 
+- 高能的数据压缩方式，与 TimescaleDB 相比，可以将多达 70 倍的数据点存入有限的存储空间，与 Prometheus、Thanos 或 Cortex 相比，所需的存储空间减少 7 倍
+- 它针对具有高延迟 IO 和低 IOPS 的存储进行了优化
+- 提供全局的查询视图，多个 Prometheus 实例或任何其他数据源可能会将数据摄取到 VictoriaMetrics
+- 操作简单
+    - VictoriaMetrics 由一个没有外部依赖的小型可执行文件组成
+    - 所有的配置都是通过明确的命令行标志和合理的默认值完成的
+    - 所有数据都存储在 - storageDataPath 命令行参数指向的目录中
+    - 可以使用 `vmbackup/vmrestore` 工具轻松快速地从实时快照备份到 S3 或 GCS 对象存储中
+- 支持从第三方时序数据库获取数据源
+- 由于存储架构，它可以保护存储在非正常关机（即 OOM、硬件重置或 kill -9）时免受数据损坏
+- 同样支持指标的 relabel 操作
+
+## 二、部署
+### 2.1 Kubernetes apply
+### 2.2 Ubuntu 虚拟机安装 [单节点&告警](https://yo-yo.fun/victoriametrics/9934c747150d/)
+#### 2.2.1 VictoriaMetrics
+- 可选安装方式
+	Binary file
+	Helm charts for single-node and cluster versions of VictoriaMetrics.
+	Docker Image
+	Kubernetes operator for VictoriaMetrics.
+	Ansible role for installing cluster VictoriaMetrics (by VictoriaMetrics).
+	Ansible role for installing cluster VictoriaMetrics (by the community).
+	Ansible role for installing single-node VictoriaMetrics (by the community).
+	Snap package for VictoriaMetrics
+
+- 重要路径
+```
+* Configuration management
+    * Prometheus scrape config can be edited with your favorite editor, its located at
+         `vi /var/snap/victoriametrics/current/etc/victoriametrics-scrape-config.yaml`
+         after changes, you can trigger config reread with `curl localhost:8248/-/reload`.
+    * Configuration tuning is possible with editing extra_flags:
+         `echo 'FLAGS="-selfScrapeInterval=10s -search.logSlowQueryDuration=20s"' >
+         /var/snap/victoriametrics/current/extra_flags
+         snap restart victoriametrics`
+    * Data folder located at `/var/snap/victoriametrics/current/var/lib/victoriametrics/`
+```
+
+- 安装和检查（二进制安装）
+```
+$  wget -c https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v1.87.10/victoria-metrics-linux-amd64-v1.87.10.tar.gz
+$  tar -tvf victoria-metrics-linux-amd64-v1.87.10.tar.gz 
+    -rwxr-xr-x valyala/valyala 20327416 2023-10-17 04:25 victoria-metrics-prod
+$ sudo mv victoria-metrics-prod /usr/local/bin/
+$  cat << EOF | sudo tee /etc/systemd/system/victoria-metrics-prod.service
+	[Unit]
+	Description = For victoriametrics
+	After = network.target
+		
+	[Service]
+	ExecStart = /usr/local/bin/victoria-metrics-prod -storageDataPath=/data/victoria
+		
+	[Install]
+	WantedBy = multi-user.target
+$ sudo systemctl  daemon-reload
+$ sudo  systemctl enable --now victoria-metrics-prod.service
+
+```
+
+- 安装并配置 Prometheus
+ 允许 Prometheus 向 VictoriaMetrics 发送数据，请在 prometheus.yml 添加以下行：
+```
+remote_write:
+  - url: http://127.0.0.1:8428/api/v1/write
+  
+curl -X POST http://x.x.x.x:9090/-/reload     # 热更新prometheus
+```
+
+- 必备的编译工具安装
+```
+wget -c https://go.dev/dl/go1.21.3.linux-amd64.tar.gz -O | sudo tar -xf ./go1.21.3.linux-amd64.tar.gz -C /usr/local
+echo "export PATH=$PATH:/usr/local/go/bin" >> /etc/profile && source /etc/profile
+go version
+sudo apt install -y build-essential 
+```
+
+- 编译 vmalert
+```shell
+git clone https://github.com/VictoriaMetrics/VictoriaMetrics
+cd VictoriaMetrics
+make vmalert
+ls VictoriaMetrics/bin/vmalert
+ sudo cp vmalert /usr/local/bin/
+```
+
+- systemd 托管 vmalert
+```bash
+[Unit]
+Description=VictoriaMetrics Alert
+After=network.target
+
+[Service]
+Type=simple
+StartLimitBurst=5
+StartLimitInterval=10
+RestartSec=1
+Restart=on-failure
+ExecStart=/usr/local/bin/vmalert\
+  -evaluationInterval=15s \        # 评估间隔
+  -rule=/home/inboc/vm/VictoriaMetrics/rules/*.yml \  # 记录规则、告警规则目录
+  -datasource.url=127.0.0.1:8428 \                 # victoria-metrics 服务地址，读取数据评估规则
+  -remoteWrite.url=127.0.0.1:8428 \                # victoria-metrics 服务地址，写入记录数据
+  -notifier.url=127.0.0.1:9193 \                   # alertmanager 服务地址
+  # -httpListenAddr=0.0.0.0:9291                     # 服务监听地址
+
+ExecStop=/bin/kill -s SIGTERM $MAINPID
+LimitNOFILE=65536
+LimitNPROC=32000
+
+[Install]
+WantedBy=multi-user.target
+```

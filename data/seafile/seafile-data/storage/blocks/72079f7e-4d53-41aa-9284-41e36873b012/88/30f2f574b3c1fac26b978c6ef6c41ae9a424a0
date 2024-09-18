@@ -1,0 +1,60 @@
+## helm 安装
+### values
+
+第一次安装过程中，没有定义 pg.password，且 uninstall 之后 pv 仍未删除、有数据保留，所以修改后再次部署仍然出现 pg 连接失败。
+```
+authentik:
+  postgresql:  
+    password: "testpasswd"
+
+server:
+metrics:  
+  enabled: true  
+  serviceMonitor:   
+    enabled: true
+
+postgresql:  
+  enabled: true  
+  auth:    
+    password: "testpasswd"
+
+redis:  
+  enabled: true
+```
+
+基于以上，servicemonitor 虽然已经发现集群中应用的指标，但是 authentik 中 outpost、pg 的自然暴露的指标没有成功被自动发现。
+authentik-outpost 被 drop，发现它没有目标 annotation，所以在 rancher ui 添加如下：
+```
+prometheus.io/scrape: true
+```
+
+### 应用目标组件
+#### 1. server
+指标暴露方式:  `.values.metrics.enabled: true ; .values.metrics.serviceMonitor.enabled: true`
+重要指标使用
+
+| 指标名称 | 含义 |
+| :--: | :--: |
+| authentik_flows_plan_time_sum | 认证流程计划时间总和 |
+| authentik_flows_plan_time_count | 认证流程计数 |
+| authentik_system_tasks | 系统任务在各种状态下的详情 |
+| authentik_admin_workers | 工作节点数量 |
+| authentik_policies_cached | 系统中已缓存策略数量 |
+| authentik_system_tasks | 系统任务持续时间 |
+| authentik_policies_execution_time_count | 策略执行数量 |
+| authentik_policies_execution_time_sum | 策略执行总时长 |
+
+#### 2. outpost
+指标暴露方式，应用天生支持暴露在 endpoint:  http://outpost:9300/metrics
+重要指标作用
+
+| 指标名称 | 作用 |
+| :--: | :--: |
+| authentik_outposts_connecttion | 已经连接的 Outpost 状态详情 |
+| authentik_outpost_proxy_requests_sum | Outpost 的请求总和 |
+| authentik_outpost_proxy_upstream_response_duration_seconds_bucket | Outpost处理不同请求的响应耗时情况分布 |
+| authentik_outpost_proxy_request_duration_seconds_sum | 不同来源、不同请求的时间计时 |
+| authentik_outpost_proxy_request_duration_seconds_count | 不同来源、不同请求的时间计数 |
+| authentik_outpost_proxy_upstream_response_duration_seconds_bucket | Outpost 响应请求的耗时情况分布 |
+| authentik_outpost_proxy_upstream_response_duration_seconds_sum | 不同来源、不同响应的时间计时 |
+| authentik_outpost_proxy_upstream_response_duration_seconds_count | 不同来源、不同响应的时间计数 |

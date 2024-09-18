@@ -1,0 +1,117 @@
+## 1. docker-compose 部署
+```bash
+wget https://github.com/goharbor/harbor/releases/download/v2.10.0/harbor-offline-installer-v2.10.0.tgz
+tar xvf harbor-offline-installer-v2.10.0.tgz  --strip-components=1
+cp harbor.yml.tmpl  harbor.yml
+vim harbor.yml
+  hostname: {自己服务器的ip 内网外网都可以}
+  http:
+  port: {自定义端口}
+  #测试中注释掉了 https
+
+sudo /bin/bash ./install.sh 
+
+如未修改则，通过admin/Harbor12345登录
+```
+## 2. metrics 开启收集
+
+在解压出的文件中编辑，vim harbor.yml
+```
+metric:
+  enabled: true
+  port: 9000 #默认是9090
+  path: /metrics
+```
+
+```
+执行离线安装中的 ./prepare
+编译结束之后执行 ./install.sh
+```
+
+>[!bug] 问题 1
+>修改 metrics 有关指标之后出现问题，找不到 env 文件----在当前环境下，需要用 sudo 权限
+
+>[!iimportant] 注意
+>harbor 有多个 url 显示不同种类指标
+>
+>|类型|url|
+>|:--:|:--:|
+>|Harbor Core Metrics|<harbor_instance>:<metrics_port>/<metrics_path>?comp=core|
+>|Registry Metrics|<harbor_instance>:<metrics_port>/<metrics_path>?comp=registry|
+>|Harbor Exporter Metrics|<harbor_instance>:<metrics_port>/<metrics_path>|
+
+## 3. 各类型详情
+### Harbor Exporter Metrics
+
+The `exporter` component metrics relate to your Harbor instance configuration and collects some data from the Harbor database. Metrics are available at `<harbor_instance>:<metrics_port>/<metrics_path>`.
+
+| Name | Description | Labels (Values) | Metric type |
+| --- | --- | --- | --- |
+| `harbor_project_total` | Total number of public and private projects | public (`true`,`false`) | gauge |
+| `harbor_project_repo_total` | Total number of repositories in a project | public (`true`,`false`), project\_name | gauge |
+| `harbor_project_member_total` | Total number of members in a project | project\_name | gauge |
+| `harbor_project_quota_usage_byte` | Total used resources of a project | project\_name | gauge |
+| `harbor_project_quota_byte` | Quota set in a project | project\_name | gauge |
+| `harbor_artifact_pulled` | Number of images pulled in a project | project\_name | gauge |
+| `harbor_project_artifact_total` | Total number of artifacts type in a project | artifact\_type , project\_name, public (`true`,`false`) | gauge |
+| `harbor_health` | Current status of Harbor |     | gauge |
+| `harbor_system_info` | Information about your Harbor instance | auth\_mode (`db_auth`, `ldap_auth`, `uaa_auth`, `http_auth`, `oidc_auth`), harbor\_version, self\_registration(`true`,`false`) | gauge |
+| `harbor_up` | Running status of Harbor components | component (`chartmuseum`, `core`, `database`, `jobservice`, `portal`, `redis`, `registry`, `registryctl`, `trivy`) | gauge |
+
+### Harbor Core Metrics
+
+The following are metrics pulled from the Harbor core pod and are available at `<harbor_instance>:<metrics_port>/<metrics_path>?comp=core`.
+
+| Name | Description | Labels (Values) | Metric type |
+| --- | --- | --- | --- |
+| `harbor_core_http_inflight_requests` | The total number of requests | operation (values from `operationId` in [Harbor API](https://github.com/goharbor/harbor/blob/master/api/v2.0/swagger.yaml). Some legacy endpoints do not have an `operationId`, so the label value is `unknown`) | gauge |
+| `harbor_core_http_request_duration_seconds` | The time duration of the requests | method (`GET`, `POST`, `HEAD`, `PATCH`, `PUT`), operation (values from `operationId` in [Harbor API](https://github.com/goharbor/harbor/blob/master/api/v2.0/swagger.yaml). Some legacy endpoints do not have an `operationId`, so the label value is `unknown`), quantile | summary |
+| `harbor_core_http_request_total` | The total number of requests | method (`GET`, `POST`, `HEAD`, `PATCH`, `PUT`), operation (values from `operationId` in [Harbor API](https://github.com/goharbor/harbor/blob/master/api/v2.0/swagger.yaml). Some legacy endpoints do not have an `operationId`, so the label value is `unknown`) | counter |
+
+### Registry Metrics
+
+The following are metrics pulled from the Docker distribution and are available at `<harbor_instance>:<metrics_port>/<metrics_path>?comp=registry`.
+
+| Name | Description | Labels (Values) | Metric type |
+| --- | --- | --- | --- |
+| `registry_http_in_flight_requests` | The in-flight HTTP requests | handler | gauge |
+| `registry_http_request_duration_seconds` | The HTTP request latencies in seconds | handler, method (`GET`, `POST`, `HEAD`, `PATCH`, `PUT`), le | histogram |
+| `registry_http_request_size_bytes` | The HTTP request sizes in bytes. | handler, le | histogram |
+
+## 4. Scrapping Metrics with Prometheus
+
+To begin accessing your Harbor instance’s metrics with Prometheus,
+
+1.  Enable exposing metrics in your `harbor.yml` [configuration file](https://goharbor.io/docs/2.2.0/install-config/configure-yml-file/) and set the port and path for metrics to be exposed on. Also see more about [reconfiguring your Harbor instance](https://goharbor.io/docs/2.2.0/install-config/reconfigure-manage-lifecycle/).
+    
+2.  Set up a Prometheus server, see the [Prometheus documentation](https://prometheus.io/docs/prometheus/latest/installation/) for more information on installing.
+    
+3.  Configure your Prometheus config file to scrape Harbor metrics exposed at your configured port and path. Below is an example scrape config, see the Prometheus documentation for all available [scrape configuration options](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config).
+    
+```fallback
+# 以下配置书写在一个 job 下将无法正确得到有关指标
+scrape_configs:
+  - job_name: 'harbor-exporter'
+    scrape_interval: 20s
+    static_configs:
+      - targets: ['<harbor_instance>:<metrics_port>']
+  - job_name: 'harbor-core'
+    scrape_interval: 20s
+    params:
+      comp: ['core']
+    static_configs:
+      - targets: ['<harbor_instance>:<metrics_port>']
+  - job_name: 'harbor-registry'
+    scrape_interval: 20s
+    params:
+      comp: ['registry']
+    static_configs:
+      - targets: ['<harbor_instance>:<metrics_port>']
+  - job_name: 'harbor-jobservice'
+        scrape_interval: 20s
+        params:
+          comp: ['jobservice']
+        static_configs:
+          - targets: ['<harbor_instance>:<metrics_port>']
+```    
+4.  Once you have configured your Prometheus server to collect your Harbor metrics, you can use [Grafana](https://grafana.com/docs/) to visualize your data.

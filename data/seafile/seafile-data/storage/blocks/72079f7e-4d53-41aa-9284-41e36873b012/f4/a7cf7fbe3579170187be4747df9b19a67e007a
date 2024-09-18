@@ -1,0 +1,7 @@
+{
+	"nodes":[
+		{"id":"fe6252eeffaac25b","x":-620,"y":-340,"width":1020,"height":740,"type":"file","file":"05_Monitor/1_Metrics/VM/redis-exporter.md"},
+		{"id":"e2f870c9a3a9ebf1","x":-694,"y":-374,"width":250,"height":60,"type":"text","text":""}
+	],
+	"edges":[]
+}

@@ -1,0 +1,7 @@
+resource "rancher2_project" "cluster_project" {
+  for_each = var.projects_info
+
+  name             = each.key
+  cluster_id       = var.cluster_v1_id
+  wait_for_cluster = true
+}

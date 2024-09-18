@@ -1,0 +1,357 @@
+## _1._**Redis集群模式介绍**
+
+*   Cluster模式是Redis3.0开始推出的
+*   Redis Cluster属于AP模型
+*   采用无中心结构，每个节点保存数据和整个集群状态, 每个节点都和其他所有节点连接
+*   官方要求：至少6个节点才可以保证高可用，即3主3从；扩展性强、更好做到高可用
+*   各个节点会互相通信，采用gossip协议交换节点元数据信息
+*   数据分散存储到各个节点上
+
+## _2._集群和哨兵的区别
+
+Sentinel哨兵：是为系统提供高可用特性,每一个Redis节点数据是同步的,且每一个Redis节点保存的都是**全量数据**
+
+Cluster集群：是将整体数据打散到多台Redis服务器,可对存储规模进行水平扩容,每一个Redis节点存储的都是完整数据的一部分
+
+## _3._Redis集群的哈希槽设计
+
+Redis集群预分好16384个槽，当需要在 Redis 集群中放置一个 key-value 时，根据 CRC16(key) mod 16384的值，决定将一个key放到哪个桶中
+
+假设主节点的数量为3，将16384个槽位按照【用户自己的规则】去分配这3个节点，每个节点复制一部分槽位
+
+*   节点1的槽位区间范围为0-5460
+*   节点2的槽位区间范围为5461-10922
+*   节点3的槽位区间范围为10923-16383
+
+注意：从节点是没有槽位的，只有主节点才有
+
+**存储查找：**
+
+对要存储查找的键进行crc16哈希运算,得到一个值，并取模16384，判断这个值在哪个节点的范围区间
+
+使用哈希槽的好处就在于可以方便的添加或移除节点。
+
+*   当需要增加节点时，只需要把其他节点的某些哈希槽挪到新节点就可以了；
+*   当需要移除节点时，只需要把移除节点上的哈希槽挪到其他节点就行了;
+
+**为什么是16384（2^14）个？**
+
+在redis节点发送心跳包时需要把所有的槽放到这个心跳包里，以便让节点知道当前集群信息，16384=16k，在发送心跳包时使用char进行bitmap压缩后是2k（2 \* 8 (8 bit) \*1024(1k) = 16K），也就是说使用2k的空间创建了16k的槽数。
+
+虽然使用CRC16算法最多可以分配65535（2^16-1）个槽位，65535=65k，压缩后就是8k（8 \* 8 (8 bit) \* 1024(1k) =65K），也就是说需要需要8k的心跳包，作者认为这样做不太值得；并且一般情况下一个redis集群不会有超过1000个master节点，所以16k的槽位是个比较合适的选择。
+
+**哈希槽的特点：**
+
+当你往Redis Cluster中加入一个Key时，会根据crc16(key) mod 16384计算这个key应该分布到哪个hash slot中，一个hash slot中会有很多key和value。你可以理解成表的分区，使用单节点时的redis时只有一个表，所有的key都放在这个表里；改用RedisCluster以后会自动为你生成16384个分区表，你insert数据时会根据上面的简单算法来决定你的key应该存在哪个分区，每个分区里有很多key。
+
+## _4._Redis 3主3从集群搭建
+
+部署架构图：**这里就是测试用，生产环境不这么玩，生产环境需要6个节点**
+
+[![image-20221017222803528](assets/1709632389-bacc17bceb40339e7bd99b1803687250.png)](http://www.fblinux.com/wp-content/uploads/2022/10/image-20221017222803528.png)
+
+1、redis 服务安装（每个节点都要）
+
+```bash
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+
+sudo apt-get update
+sudo apt-get install redis
+```
+
+2、每个节点添加如下6379和6380配置文件
+
+原配置文件基础上修改，并新增一个配置文件，在执行启动 server 的命令时，指定配置文件并运行两次 'redis-server'
+
+6379 配置主要修改项目、其余默认即可：
+
+```bash
+# cat redis-cluster-6379.conf
+bind IP
+port 6379
+daemonize yes
+requirepass "123456"
+logfile "./cluster-6379.log"
+dbfilename "cluster-6379.rdb"
+dir "./"
+masterauth "123456"
+#是否开启集群
+cluster-enabled yes
+# 生成的node文件，记录集群节点信息，默认为nodes.conf
+cluster-config-file nodes-6379.conf
+#节点连接超时时间
+cluster-node-timeout 20000
+#集群节点映射端口
+cluster-announce-port 6379
+#集群节点总线端口,节点之间互相通信，常规端口+1万
+cluster-announce-bus-port 16379
+```
+
+6380实例配置：
+
+```bash
+# cat redis-cluster-6380.conf
+bind IP
+port 6380
+daemonize yes
+requirepass "123456"
+logfile "./cluster-6380.log"
+dbfilename "cluster-6380.rdb"
+dir "./"
+masterauth "123456"
+#是否开启集群
+cluster-enabled yes
+# 生成的node文件，记录集群节点信息，默认为nodes.conf
+cluster-config-file nodes-6380.conf
+#节点连接超时时间
+cluster-node-timeout 20000
+#集群节点映射端口
+cluster-announce-port 6380
+#集群节点总线端口,节点之间互相通信，常规端口+1万
+cluster-announce-bus-port 16380
+```
+
+3、启动服务
+
+|     |     |
+| --- | --- |
+| 1<br><br>2 | `.``/src/redis-server` `redis-cluster-6379.conf`<br><br>`.``/src/redis-server` `redis-cluster-6380.conf` |
+
+4、构建集群
+
+只需要在任意一个节点执行如下命令，就可以把刚才创建的6个redis实例联系在一起
+
+|     |     |
+| --- | --- |
+| 1   | `.``/src/redis-cli` `-a 123456 --cluster create 172.16.247.3:6379 172.16.247.3:6380 172.16.247.4:6379 172.16.247.4:6380 172.16.247.5:6379 172.16.247.5:6380 --cluster-replicas 1` |
+
+–cluster-replicas：表示要为主节点分配的从节点数量
+
+```bash
+>>> Performing hash slots allocation on 6 nodes...
+Master[0] -> Slots 0 - 5460
+Master[1] -> Slots 5461 - 10922
+Master[2] -> Slots 10923 - 16383
+Adding replica 172.16.247.4:6380 to 172.16.247.3:6379
+Adding replica 172.16.247.5:6380 to 172.16.247.4:6379
+Adding replica 172.16.247.3:6380 to 172.16.247.5:6379
+M: 309189a42fb9319507a8596849e433a06f27544d 172.16.247.3:6379
+   slots:[0-5460] (5461 slots) master
+S: b6d900ca23212bd7dd117289c4f8548422b71f9b 172.16.247.3:6380
+   replicates b4574bcd7f713a989821a3e6592d5a033178f580
+M: a81f3478de9679484eca701cfdef12749974a7af 172.16.247.4:6379
+   slots:[5461-10922] (5462 slots) master
+S: 5e0b9dbf137ca2170b4cd164c860b4f60bce8bd5 172.16.247.4:6380
+   replicates 309189a42fb9319507a8596849e433a06f27544d
+M: b4574bcd7f713a989821a3e6592d5a033178f580 172.16.247.5:6379
+   slots:[10923-16383] (5461 slots) master
+S: 5d90efb37d8c916e77d503ab2c76ab3e58be5558 172.16.247.5:6380
+   replicates a81f3478de9679484eca701cfdef12749974a7af
+Can I set the above configuration? (type 'yes' to accept): yes
+```
+
+上面是执行完创建集群命令之后生成的信息，要是可以接收这个配置就敲yes确认，然后redis就会自己完成集群的搭建工作。
+
+看到如下输出说明集群搭建成功
+
+5、客户端连接集群
+
+|     |     |
+| --- | --- |
+| 1   | `.``/redis-cli` `-c -a 123456` |
+
+**客户端连接集群需要增加-c参数**
+
+查看集群状态：
+
+```bash
+127.0.0.1:6379> cluster info
+#集群状态
+cluster_state:ok
+# 已经分配的槽
+cluster_slots_assigned:16384
+# 槽的状态
+cluster_slots_ok:16384
+# 失败和不可用的槽
+cluster_slots_pfail:0
+cluster_slots_fail:0
+# 集群中的节点数
+cluster_known_nodes:6
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:1
+cluster_stats_messages_ping_sent:438
+cluster_stats_messages_pong_sent:429
+cluster_stats_messages_sent:867
+cluster_stats_messages_ping_received:424
+cluster_stats_messages_pong_received:438
+cluster_stats_messages_meet_received:5
+cluster_stats_messages_received:867
+total_cluster_links_buffer_limit_exceeded:0
+```
+
+查看集群节点信息：
+
+```plain
+127.0.0.1:6379> cluster nodes
+b6d900ca23212bd7dd117289c4f8548422b71f9b 172.16.247.3:6380@16380 slave b4574bcd7f713a989821a3e6592d5a033178f580 0 1666016608298 5 connected
+b4574bcd7f713a989821a3e6592d5a033178f580 172.16.247.5:6379@16379 master - 0 1666016605161 5 connected 10923-16383
+309189a42fb9319507a8596849e433a06f27544d 172.16.247.3:6379@16379 myself,master - 0 1666016600000 1 connected 0-5460
+a81f3478de9679484eca701cfdef12749974a7af 172.16.247.4:6379@16379 master - 0 1666016607000 3 connected 5461-10922
+5e0b9dbf137ca2170b4cd164c860b4f60bce8bd5 172.16.247.4:6380@16380 slave 309189a42fb9319507a8596849e433a06f27544d 0 1666016606211 1 connected
+5d90efb37d8c916e77d503ab2c76ab3e58be5558 172.16.247.5:6380@16380 slave a81f3478de9679484eca701cfdef12749974a7af 0 1666016607261 3 connected
+```
+
+## _5._故障场景测试结论
+
+故障测试不贴过程了，篇幅太多，直接放测试内容和结论：
+
+1、kill 掉一个从节点：集群正常
+
+2、kill 掉一个主节点：自动故障转移，从节点提升为主节点；故障恢复后，以从节点身份执行任务
+
+3、kill 掉一组主从节点：集群停止响应 CLUSTERDOWN The cluster is down
+
+## _6._Redis 集群扩容
+
+（1）添加master节点：新配置了一个 172.16.247.3:6381 节点作为Master
+
+执行如下命令，将172.16.247.3:6381节点接入到172.16.247.3:6379所在的集群中 ,这里是将节点加入了集群中，但是并没有分配slot，所以这个节点并没有真正的开始分担集群工作。
+
+|     |     |
+| --- | --- |
+| 1   | `.``/src/redis-cli` `--cluster add-node 172.16.247.3:6381 172.16.247.3:6379 -a 123456` |
+
+这时172.16.247.3:6381成为了新主,节点id:2b15e1be7a903d4be7eb75121bc6110145915264,但slot为0-0
+
+```bash
+]# cat nodes-6381.conf
+2b15e1be7a903d4be7eb75121bc6110145915264 172.16.247.3:6381@16381 myself,master - 0 0 0 connected
+5d90efb37d8c916e77d503ab2c76ab3e58be5558 172.16.247.5:6380@16380 slave a81f3478de9679484eca701cfdef12749974a7af 0 1666019135875 3 connected
+b6d900ca23212bd7dd117289c4f8548422b71f9b 172.16.247.3:6380@16380 slave b4574bcd7f713a989821a3e6592d5a033178f580 0 1666019135872 5 connected
+a81f3478de9679484eca701cfdef12749974a7af 172.16.247.4:6379@16379 master - 0 1666019135773 3 connected 5461-10922
+309189a42fb9319507a8596849e433a06f27544d 172.16.247.3:6379@16379 master - 0 1666019135665 1 connected 0-5460
+b4574bcd7f713a989821a3e6592d5a033178f580 172.16.247.5:6379@16379 master - 0 1666019135773 5 connected 10923-16383
+5e0b9dbf137ca2170b4cd164c860b4f60bce8bd5 172.16.247.4:6380@16380 slave 309189a42fb9319507a8596849e433a06f27544d 0 1666019135771 1 connected
+```
+
+分配slot：从三个master分配1024个slot到新节点，三个master节点每人分配三分之一
+
+|     |     |
+| --- | --- |
+| 1   | `.``/redis-cli` `-a 123456 --cluster reshard 172.16.247.3:6381 --cluster-from 309189a42fb9319507a8596849e433a06f27544d,a81f3478de9679484eca701cfdef12749974a7af,b4574bcd7f713a989821a3e6592d5a033178f580 --cluster-to 2b15e1be7a903d4be7eb75121bc6110145915264 --cluster-slots 1024` |
+
+–cluster-from：表示slot目前所在的节点的node ID，多个ID用逗号分隔
+
+–cluster-to：表示需要新分配节点的node ID（貌似每次只能分配一个）
+
+–cluster-slots：分配的slot数量
+
+分配slot后槽位信息如下：
+
+```bash
+# cat nodes-6381.conf
+2b15e1be7a903d4be7eb75121bc6110145915264 172.16.247.3:6381@16381 myself,master - 0 1666019672000 7 connected 0-340 5461-5802 10923-11263
+5d90efb37d8c916e77d503ab2c76ab3e58be5558 172.16.247.5:6380@16380 slave a81f3478de9679484eca701cfdef12749974a7af 0 1666019680517 3 connected
+b6d900ca23212bd7dd117289c4f8548422b71f9b 172.16.247.3:6380@16380 slave b4574bcd7f713a989821a3e6592d5a033178f580 0 1666019678518 5 connected
+a81f3478de9679484eca701cfdef12749974a7af 172.16.247.4:6379@16379 master - 0 1666019679000 3 connected 5803-10922
+309189a42fb9319507a8596849e433a06f27544d 172.16.247.3:6379@16379 master - 0 1666019677000 1 connected 341-5460
+b4574bcd7f713a989821a3e6592d5a033178f580 172.16.247.5:6379@16379 master - 0 1666019679510 5 connected 11264-16383
+5e0b9dbf137ca2170b4cd164c860b4f60bce8bd5 172.16.247.4:6380@16380 slave 309189a42fb9319507a8596849e433a06f27544d 0 1666019673349 1 connected
+```
+
+（2）添加slave从节点：新配置了一个 172.16.247.4:6381 节点作为Slave
+
+```bash
+./redis-cli --cluster add-node 172.16.247.4:6381 172.16.247.3:6381 --cluster-slave --cluster-master-id 2b15e1be7a903d4be7eb75121bc6110145915264 -a 123456
+```
+
+add-node: 后面的分别跟着新加入的slave和slave对应的master
+
+cluster-slave：表示加入的是slave节点
+
+–cluster-master-id：表示slave对应的master的node ID
+
+执行命令完成后，在查看集群状态，可以看到 172.16.247.4:6381已经加入集群
+
+```bash
+]# cat nodes-6379.conf
+b6d900ca23212bd7dd117289c4f8548422b71f9b 172.16.247.3:6380@16380 slave b4574bcd7f713a989821a3e6592d5a033178f580 0 1666020036302 5 connected
+b4574bcd7f713a989821a3e6592d5a033178f580 172.16.247.5:6379@16379 master - 0 1666020033147 5 connected 11264-16383
+309189a42fb9319507a8596849e433a06f27544d 172.16.247.3:6379@16379 myself,master - 0 1666020033000 1 connected 341-5460
+bf32a3d2718b35be4d29b1a2bb218c082a4cf716 172.16.247.4:6381@16381 slave 2b15e1be7a903d4be7eb75121bc6110145915264 0 1666020037031 7 connected
+a81f3478de9679484eca701cfdef12749974a7af 172.16.247.4:6379@16379 master - 0 1666020034000 3 connected 5803-10922
+2b15e1be7a903d4be7eb75121bc6110145915264 172.16.247.3:6381@16381 master - 0 1666020035250 7 connected 0-340 5461-5802 10923-11263
+5e0b9dbf137ca2170b4cd164c860b4f60bce8bd5 172.16.247.4:6380@16380 slave 309189a42fb9319507a8596849e433a06f27544d 0 1666020035000 1 connected
+5d90efb37d8c916e77d503ab2c76ab3e58be5558 172.16.247.5:6380@16380 slave a81f3478de9679484eca701cfdef12749974a7af 0 1666020032096 3 connected
+```
+
+## _7._Redis 集群缩容
+
+收缩的操作是按照扩容的反向来进行的
+
+（1）首先删除master对应的slave
+
+|     |     |
+| --- | --- |
+| 1   | `.``/redis-cli` `-a 123456 --cluster del-node 172.16.247.4:6381 bf32a3d2718b35be4d29b1a2bb218c082a4cf716` |
+
+del-node：后面跟着slave节点的 ip:port 和node ID
+
+验证：172.16.247.4:6381从其他节点nodes.conf中消失
+
+```bash
+# cat nodes-6379.conf
+b6d900ca23212bd7dd117289c4f8548422b71f9b 172.16.247.3:6380@16380 slave b4574bcd7f713a989821a3e6592d5a033178f580 0 1666020440000 5 connected
+b4574bcd7f713a989821a3e6592d5a033178f580 172.16.247.5:6379@16379 master - 0 1666020436000 5 connected 11264-16383
+309189a42fb9319507a8596849e433a06f27544d 172.16.247.3:6379@16379 myself,master - 0 1666020434000 1 connected 341-5460
+a81f3478de9679484eca701cfdef12749974a7af 172.16.247.4:6379@16379 master - 0 1666020440046 3 connected 5803-10922
+2b15e1be7a903d4be7eb75121bc6110145915264 172.16.247.3:6381@16381 master - 0 1666020441090 7 connected 0-340 5461-5802 10923-11263
+5e0b9dbf137ca2170b4cd164c860b4f60bce8bd5 172.16.247.4:6380@16380 slave 309189a42fb9319507a8596849e433a06f27544d 0 1666020443205 1 connected
+5d90efb37d8c916e77d503ab2c76ab3e58be5558 172.16.247.5:6380@16380 slave a81f3478de9679484eca701cfdef12749974a7af 0 1666020442131 3 connected
+```
+
+（2）清空master的slot
+
+将172.16.247.3:6381主节点的槽全部移动到172.16.247.4:6379节点
+
+|     |     |
+| --- | --- |
+| 1   | `.``/src/redis-cli` `-a 123456 --cluster reshard 172.16.247.3:6381 --cluster-from 2b15e1be7a903d4be7eb75121bc6110145915264 --cluster-to a81f3478de9679484eca701cfdef12749974a7af --cluster-slots 1024` |
+
+验证：172.16.247.3:6381主节点已没有任何槽，并成为172.16.247.4:6379的从节点
+
+```bash
+# cat nodes-6379.conf
+b6d900ca23212bd7dd117289c4f8548422b71f9b 172.16.247.3:6380@16380 slave b4574bcd7f713a989821a3e6592d5a033178f580 0 1666020770000 5 connected
+b4574bcd7f713a989821a3e6592d5a033178f580 172.16.247.5:6379@16379 master - 0 1666020768300 5 connected 11264-16383
+309189a42fb9319507a8596849e433a06f27544d 172.16.247.3:6379@16379 myself,master - 0 1666020769000 1 connected 341-5460
+a81f3478de9679484eca701cfdef12749974a7af 172.16.247.4:6379@16379 master - 0 1666020772343 8 connected 0-340 5461-11263
+2b15e1be7a903d4be7eb75121bc6110145915264 172.16.247.3:6381@16381 slave a81f3478de9679484eca701cfdef12749974a7af 0 1666020773067 8 connected
+5e0b9dbf137ca2170b4cd164c860b4f60bce8bd5 172.16.247.4:6380@16380 slave 309189a42fb9319507a8596849e433a06f27544d 0 1666020770313 1 connected
+5d90efb37d8c916e77d503ab2c76ab3e58be5558 172.16.247.5:6380@16380 slave a81f3478de9679484eca701cfdef12749974a7af 0 1666020771321 8 connected
+```
+
+（3）下线（删除）172.16.247.3:6381节点
+
+|     |     |
+| --- | --- |
+| 1   | `.``/src/redis-cli` `-a 123456 --cluster del-node 172.16.247.3:6381 2b15e1be7a903d4be7eb75121bc6110145915264` |
+
+验证172.16.247.3:6381节点从集群消失
+
+```bash
+# cat nodes-6379.conf
+b6d900ca23212bd7dd117289c4f8548422b71f9b 172.16.247.3:6380@16380 slave b4574bcd7f713a989821a3e6592d5a033178f580 0 1666021023051 5 connected
+b4574bcd7f713a989821a3e6592d5a033178f580 172.16.247.5:6379@16379 master - 0 1666021024104 5 connected 11264-16383
+309189a42fb9319507a8596849e433a06f27544d 172.16.247.3:6379@16379 myself,master - 0 1666021024000 1 connected 341-5460
+a81f3478de9679484eca701cfdef12749974a7af 172.16.247.4:6379@16379 master - 0 1666021027201 8 connected 0-340 5461-11263
+5e0b9dbf137ca2170b4cd164c860b4f60bce8bd5 172.16.247.4:6380@16380 slave 309189a42fb9319507a8596849e433a06f27544d 0 1666021026163 1 connected
+5d90efb37d8c916e77d503ab2c76ab3e58be5558 172.16.247.5:6380@16380 slave a81f3478de9679484eca701cfdef12749974a7af 0 1666021028255 8 connected
+```
+
+转载请注明：[西门飞冰的博客](http://www.fblinux.com/) » [redis Cluster集群实战（7.0.5版本）](http://www.fblinux.com/?p=2386)
+
+[喜欢 (2)](javascript:)or分享 (0)

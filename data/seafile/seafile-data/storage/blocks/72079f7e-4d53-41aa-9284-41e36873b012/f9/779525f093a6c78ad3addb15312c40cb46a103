@@ -1,0 +1,75 @@
+### Der 、Cer、 Pfx、 Pem 它们都是扩展名（文件名的后缀，代表格式）
+
+.DER：用二进制 DER 编码的证书；. PEM：用 ASCLL (BASE64)编码的证书；\
+.CER：存放公钥，没有私钥；\
+.PFX：存放公钥和私钥（pem 后缀的证书都是 base64编码；der 后缀的证书都是二进制格式；\
+Crt .cer 后缀的文件都是证书文件（编码方式不一定，有可能是. Pem, 也有可能是. Der）；\
+. Pfx 主要用于 windows 平台，浏览器可以使用，也是包含证书和私钥，获取私钥需要密码才可以）
+
+X509文件扩展名（x509 这种证书只有公钥，不包含私钥。）
+
+编码（也用作扩展）
+
+DER = DER扩展用于二进制DER编码证书。这些文件也可能带有CER或CRT扩展名。正确的英语用法是“我有DER编码证书”而不是“我有DER证书”。
+
+PEM = PEM扩展名用于不同类型的X.509v3文件，这些文件包含前缀为“-BEGIN ...”行的ASCII（Base64）装甲数据。
+
+组合
+
+在某些情况下，将多个X.509基础结构组合成单个文件是有利的。一个常见的例子是将私钥和公钥组合到同一个证书中。
+
+组合证书密钥和链的最简单方法是将每个密钥转换为PEM编码证书，然后将每个文件的内容简单复制到新文件中。这适用于组合文件以在Apache应用程序中使用。
+
+萃取
+
+有些证书将以合并形式出现。其中一个文件可以包含以下任何一个：证书，私钥，公钥，签名证书，证书颁发机构（CA）和/或授权链。
+
+### PEM 格式
+
+PEM格式通常用于数字证书认证机构（Certificate Authorities，CA），扩展名为.pem, .crt, .cer, and .key。内容为Base64编码的ASCII码文件，有类似"-----BEGIN CERTIFICATE-----" 和 "-----END CERTIFICATE-----"的头尾标记。[服务器](https://cloud.tencent.com/act/pro/promotion-cvm?from_column=20065&from=20065)认证证书，中级认证证书和私钥都可以储存为PEM格式（认证证书其实就是公钥）。Apache和类似的服务器使用PEM格式证书。
+
+[ssl certificate pem file](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.howtouselinux.com%2Fpost%2Fssl-certificate-pem-file&source=article&objectId=1944364)
+
+### DER 格式
+
+DER格式与PEM不同之处在于其使用二进制而不是Base64编码的ASCII。扩展名为.der，但也经常使用.cer用作扩展名，所有类型的认证证书和私钥都可以存储为DER格式。Java使其典型使用平台。
+
+[pfx file with examples](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.howtouselinux.com%2Fpost%2Fpfx-file-with-examples&source=article&objectId=1944364)
+
+### 可以使用OpenSSL命令行工具在不同证书格式之间的转换
+
+[converting cer crt der pem pfx certificate](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.howtouselinux.com%2Fpost%2Fconverting-cer-crt-der-pem-pfx-certificate&source=article&objectId=1944364)
+
+[converting ssl certificate from crt to pem](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.howtouselinux.com%2Fpost%2Fconverting-ssl-certificate-from-crt-to-pem&source=article&objectId=1944364)
+
+PEM to DER
+
+`openssl x509 -outform der -in certificate. Pem -out certificate. Der `
+
+PEM to PFX
+
+`openssl pkcs12 -export -out certificate.pfx -inkey privateKey.key -in certificate.crt -certfile CACert.crt`
+
+DER to PEM
+
+`openssl x509 -inform der -in certificate. Cer -out certificate. Pem`
+
+PFX to PEM
+
+`openssl pkcs12 -in certificate. Pfx -out certificate. Cer -nodes`
+
+PFX转PEM后certificate.cer文件包含认证证书和私钥，需要把它们分开存储才能使用。）
+
+### 知识点：
+
+1、使用公钥操作数据属于加密
+
+2、使用私钥对原文的摘要操作属于签名
+
+3、公钥和私钥可以互相加解密
+
+4、不同格式的证书之间可以互相转换
+
+5、公钥可以对外公开，但是私钥千万不要泄露，要妥善保存
+
+注意：在我们备份证书信息的时候，最好使用.jks或者.pfx文件进行保存，这样备份的证书文件可以被完整的导出。

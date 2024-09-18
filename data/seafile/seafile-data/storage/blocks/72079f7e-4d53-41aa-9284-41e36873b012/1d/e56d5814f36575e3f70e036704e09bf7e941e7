@@ -1,0 +1,37 @@
+
+
+# rancher - inboc
+
+rancher
+
+[Xie Jian 已发布 大约 4 小时前](https://outline.inboc.net/doc/rancher-SJGUfAJkrj/history)  • [被浏览 3 用户](https://outline.inboc.net/doc/rancher-SJGUfAJkrj/insights)
+
+1、创建 Property Mappings
+
+![](assets/1713432781-6b76b4a360bfe94c6156551c7ea78bce.png)
+
+  
+
+2、创建 Provider
+
+![](assets/1713432781-461da7eecac39f0e3c45ca71071b0e4c.png)
+
+3、生成自签名证书，并下载生成的证书文件
+
+![](assets/1713432781-08b25bdcb1e26aabc1cc1cf65c780556.png)
+
+4、创建 Application
+
+![](assets/1713432781-a14560fd195694cf2d3b5aa3c4ad0ee4.png)
+
+5、下载 Metadata
+
+![](assets/1713432781-d31c80fc3d76f673afacb4ce7fdf74b1.png)
+
+6、配置rancher
+
+![](assets/1713432781-2ebf2f8baa23c48d522ff1aff4816a63.png)
+
+[反向链接](#backlinks)
+
+[7\. 项目配置](https://outline.inboc.net/doc/7-Y6TGY95RO9#d-SJGUfAJkrj)

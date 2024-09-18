@@ -1,0 +1,45 @@
+> Apple 公司工程师 Cindy Sridharan 博文“监控与 可观察性”（Monitoring and Observability） 首次将 Observability 带入开发者的视野。对软件而言，监控 (Monitoring)与可观测性(Observability)是 2 个不同的概念，监控旨在识别系统是否正常运行，可观测性探究运行不畅的原因。
+
+## 0x01 背景
+
+云原生计算基 金会 （Cloud Native Computing Foundation，以下简称 CNCF）制定发布 OpenTracing 标 准来统一链路跟踪中涉及的相关标准和规范，Google发布 OpenCensus 项目包含 Metrics 标准及采集 Agent、 Collector 规范，由于 OpenTracing 与 OpenCensus 存在交集，2019 年 CNCF 合并 OpenTracing 与 OpenCensus 推出 OpenTelemetry 项目，旨在建立标准规范统一 Metrics、Logs 和 Traces3 种数据，核心技术是产生、收集和处理可观测性数据，并支持传输到分析软件中。 OpenTelemetry 的问世加速了云原生可观测性技术和生态的发展；2020 年 9 月 CNCF 发布可观测性推荐产 品 ， 主 要 工 具 有 Prometheus、Grafana、Elastic、Jaeger、 OpenTelemetry；可观测性成为云原生的一项必备要素。
+
+![](attachments/1715399779-648c8f18d4100280ca75dc69ce76c560.webp)
+
+## 0x02 实现路径
+
+### 2.1 Pod 内以边车（sidecar）+ Jaeger Collector + Kafka+ Elasticsearch + Logstash
+
+![](attachments/1715399779-ee849517f2e4dcea136e822f908e20fa.webp)
+
+![](attachments/1715399779-4958654c037e2d4037654edf52d1d65e.webp)
+
+### 2.2 基于eBPF的的云原生可观测性
+
+![](attachments/1715399779-c8b917703ab98939c399e8c3db5749de.webp)
+
+### 2.3 OpenTelemetry 框架下的组合
+
+![](attachments/1715399779-92cf7a2422196ae61d1fd579df825083.webp)
+
+图5
+
+![](attachments/1715399779-2a509de55edc5ec905c95836b4826830.webp)
+
+图6
+
+### 2.4 Prometheus、Grafana、AlertManager + Fluentd、ElasticSearch、Kibana
+
+![](attachments/1715399779-9de5d73dc4d6258fb59f9aff25556d4a.webp)
+
+## 0x03 容器网络可观测
+
+![](attachments/1715399779-27fcab4dcd4d694adbe9d2e59d38521b.webp)
+
+## 0xff 参考文档
+
+1.  基于Kubernetes的通用云原生大数据架构\_杜森.pdf
+2.  一种云原生系统可观测性方案\_贾宇清-A.pdf
+3.  可观测性技术研究\_高巍-B-ebpf.pdf
+4.  云原生可观测性解决方案助力民生银行IT系统安全运维-eBPF.pdf
+5.  基于eBPF的容器网络可观测性方法与实践\_刘畅.pdf

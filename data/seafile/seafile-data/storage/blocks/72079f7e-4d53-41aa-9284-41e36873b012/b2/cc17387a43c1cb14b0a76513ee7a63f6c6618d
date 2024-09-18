@@ -1,0 +1,63 @@
+## Installation in Your Own Grafana Instance
+
+>[!Important]
+>
+>The following Loki and Grafana version and configuration are required:
+>
+>-  Loki v 3.0+
+>>  
+>> `--pattern-ingester.enabled=true` for pattern ingestion 
+>>
+>>(key in charts: `loki.pattern_ingester.enabled ` )
+>>    
+>>Volume endpoint enabled in Loki config: 
+>>```
+>>limits_config:
+>> volume_enabled: true
+>>```
+>- Grafana v11.0+
+
+### Installation via cli
+
+You can install Explore Logs in your own Grafana instance using `grafana-cli` :
+
+```shell
+grafana-cli --pluginUrl=https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip plugins install grafana-lokiexplore-app
+```
+
+### Installation via environment variables
+
+If you want to [install the app in a docker container](https://grafana.com/docs/grafana/latest/setup-grafana/configure-docker/#install-plugins-in-the-docker-container), you need to configure the following environment variable:
+
+```
+GF_INSTALL_PLUGINS=https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip;grafana-lokiexplore-app
+```
+
+相当于开箱即用的查询（包括 log & metrics）。
+
+虚拟机上的 service label 需要重新标记为 service_name 便可以完全识别为目标 service。（但是这个应用的 label 和字段的使用还存在问题）
+
+![相当于开箱即用的查询](attachments/Pasted%20image%2020240710143745.png)
+
+进一步研究：
+
+- [x] 实现 service_name 标签中添加 VM 或者 docker 容器即可
+
+
+## Debug
+### 插件异常报错 
+    patterns 异常 + detected_level 没有数据
+
+- loki logs
+```
+level=error ts=2024-07-15T08:03:53.855695102Z caller=tee.go:53 component=pattern-tee msg="failed to send stream to pattern ingester" err="empty ring"
+```
+
+>[!solutions]
+>it doesn't work with 3.0.0 Try grafana/loki:main-4c563f7
+>
+>loki选择 main 分支 tag 的镜像
+>
+>使用过程中会出现某些 lables 下没有分解出内容和图表，主要原因应该是当前选择的时间下 app 没有日志输出
+
+此时一切正常，可以在各个功能下正常进行渲染图表并输出日志

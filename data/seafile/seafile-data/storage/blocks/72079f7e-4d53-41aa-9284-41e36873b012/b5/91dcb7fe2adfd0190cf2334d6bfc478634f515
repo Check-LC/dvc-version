@@ -1,0 +1,438 @@
+## Nginx虚拟主机流量状态模块
+
+## 目录
+
+*   [12、变量](#12%E3%80%81%E5%8F%98%E9%87%8F)
+*   [13、流量限制](#13%E3%80%81%E6%B5%81%E9%87%8F%E9%99%90%E5%88%B6)
+    *   [限制server的流量](#%E9%99%90%E5%88%B6server%E7%9A%84%E6%B5%81%E9%87%8F)
+    *   [限制筛选器（filter）的流量](#%E9%99%90%E5%88%B6%E7%AD%9B%E9%80%89%E5%99%A8%EF%BC%88filter%EF%BC%89%E7%9A%84%E6%B5%81%E9%87%8F)
+    *   [限制上游（upstream）流量](#%E9%99%90%E5%88%B6%E4%B8%8A%E6%B8%B8%EF%BC%88upstream%EF%BC%89%E6%B5%81%E9%87%8F)
+*   [14、用例](#14%E3%80%81%E7%94%A8%E4%BE%8B)
+    *   [使用GeoIP计算各个国家的流量](#%E4%BD%BF%E7%94%A8GeoIP%E8%AE%A1%E7%AE%97%E5%90%84%E4%B8%AA%E5%9B%BD%E5%AE%B6%E7%9A%84%E6%B5%81%E9%87%8F)
+    *   [单个存储容量（storage-volume）的流量计算](#%E5%8D%95%E4%B8%AA%E5%AD%98%E5%82%A8%E5%AE%B9%E9%87%8F%EF%BC%88storage-volume%EF%BC%89%E7%9A%84%E6%B5%81%E9%87%8F%E8%AE%A1%E7%AE%97)
+    *   [计算单个用户代理（user-agent）的流量](#%E8%AE%A1%E7%AE%97%E5%8D%95%E4%B8%AA%E7%94%A8%E6%88%B7%E4%BB%A3%E7%90%86%EF%BC%88user-agent%EF%BC%89%E7%9A%84%E6%B5%81%E9%87%8F)
+    *   [为详细的http状态代码计算流量](#%E4%B8%BA%E8%AF%A6%E7%BB%86%E7%9A%84http%E7%8A%B6%E6%80%81%E4%BB%A3%E7%A0%81%E8%AE%A1%E7%AE%97%E6%B5%81%E9%87%8F)
+    *   [动态dns的流量计算](#%E5%8A%A8%E6%80%81dns%E7%9A%84%E6%B5%81%E9%87%8F%E8%AE%A1%E7%AE%97)
+    *   [排除状态页的流量计算](#%E6%8E%92%E9%99%A4%E7%8A%B6%E6%80%81%E9%A1%B5%E7%9A%84%E6%B5%81%E9%87%8F%E8%AE%A1%E7%AE%97)
+    *   [永久维护统计数据](#%E6%B0%B8%E4%B9%85%E7%BB%B4%E6%8A%A4%E7%BB%9F%E8%AE%A1%E6%95%B0%E6%8D%AE)
+*   [15、自定义](#15%E3%80%81%E8%87%AA%E5%AE%9A%E4%B9%89)
+    *   [安装模块后进行自定义](#%E5%AE%89%E8%A3%85%E6%A8%A1%E5%9D%97%E5%90%8E%E8%BF%9B%E8%A1%8C%E8%87%AA%E5%AE%9A%E4%B9%89)
+    *   [在安装模块之前进行自定义](#%E5%9C%A8%E5%AE%89%E8%A3%85%E6%A8%A1%E5%9D%97%E4%B9%8B%E5%89%8D%E8%BF%9B%E8%A1%8C%E8%87%AA%E5%AE%9A%E4%B9%89)
+
+### 12、变量
+
+提供了以下嵌入式变量：
+
+*   **$vts\_request\_counter**
+    *   从客户端接收的客户端请求总数。
+*   **$vts\_in\_bytes**
+    *   从客户端接收的字节总数。
+*   **$vts\_out\_bytes**
+    *   发送到客户端的总字节数。
+*   **$vts\_1xx\_counter**
+    *   状态代码为1xx的响应数。
+*   **$vts\_2xx\_counter**
+    *   状态代码为2xx的响应数。
+*   **$vts\_3xx\_counter**
+    *   状态代码为3xx的响应数。
+*   **$vts\_4xx\_counter**
+    *   状态代码为4xx的响应数。
+*   **$vts\_5xx\_counter**
+    *   状态代码为5xx的响应数。
+*   **$vts\_cache\_miss\_counter**
+    *   缓存未命中数。
+*   **$vts\_cache\_bypass\_counter**
+    *   缓存旁路数。
+*   **$vts\_cache\_expired\_counter**
+    *   缓存已过期数。
+*   **$vts\_cache\_stale\_counter**
+    *   缓存失效的数量。
+*   **$vts\_cache\_updating\_counter**
+    *   缓存更新的次数。
+*   **$vts\_cache\_revalidated\_counter**
+    *   重新验证的缓存数。
+*   **$vts\_cache\_hit\_counter**
+    *   缓存命中数。
+*   **$vts\_cache\_scarce\_counter**
+    *   未达缓存要求的请求的数量。
+*   **$vts\_request\_time\_counter**
+    *   请求处理时间的累计数量。
+*   **$vts\_request\_time**
+    *   请求处理的平均时间。
+
+### 13、流量限制
+
+它能够通过使用指令[`vhost_traffic_status_limit_traffic`](https://blog.csdn.net/tobrainto/article/nginx-module-vts-all/#vhost_traffic_status_limit_traffic)来限制每个主机的总流量。  
+它还可以通过使用指令[`vhost_traffic_status_limit_traffic_by_set_key`](https://blog.csdn.net/tobrainto/article/nginx-module-vts-all/#vhost_traffic_status_limit_traffic_by_set_key)来限制所有流量。  
+当超过限制时，服务器将返回503（服务暂时不可用）错误以响应请求。返回码可以更改。
+
+#### 限制server的流量
+
+```Nginx
+http {
+
+    vhost_traffic_status_zone;
+
+    ...
+
+    server {
+
+        server_name *.example.org;
+
+        vhost_traffic_status_limit_traffic in:64G;
+        vhost_traffic_status_limit_traffic out:1024G;
+
+        ...
+    }
+}
+```
+
+*   将`*.example.org`上的入/出总流量分别限制为64G和1024G。如果启用`vhost_traffic_status_filter_by_host`指令，则每个域（domain）单独工作。
+
+#### 限制筛选器（filter）的流量
+
+```Nginx
+http {
+    geoip_country /usr/share/GeoIP/GeoIP.dat;
+
+    vhost_traffic_status_zone;
+
+    ...
+
+    server {
+
+        server_name example.org;
+
+        vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;
+        vhost_traffic_status_limit_traffic_by_set_key FG@country::$server_name@US out:1024G;
+        vhost_traffic_status_limit_traffic_by_set_key FG@country::$server_name@CN out:2048G;
+
+        ...
+
+    }
+}
+```
+
+*   限制`example.org`上进入美国和中国的总流量分别为1024G和2048G。
+
+#### 限制上游（upstream）流量
+
+```Nginx
+http {
+
+    vhost_traffic_status_zone;
+
+    ...
+
+    upstream backend {
+        server 10.10.10.17:80;
+        server 10.10.10.18:80;
+    }
+
+    server {
+
+        server_name example.org;
+
+        location /backend {
+            vhost_traffic_status_limit_traffic_by_set_key UG@backend@10.10.10.17:80 in:512G;
+            vhost_traffic_status_limit_traffic_by_set_key UG@backend@10.10.10.18:80 in:1024G;
+            proxy_pass http://backend;
+        }
+
+        ...
+
+    }
+}
+```
+
+*   将进入`example.org`上游后端的每个对等端的总流量分别限制为512G和1024G。
+
+`注意：` 流量是累积传输或计数器，而不是带宽。
+
+### 14、用例
+
+它能够使用指令`vhost_traffic_status_filter_by_set_key`计算用户定义的单个统计信息。
+
+#### 使用GeoIP计算各个国家的流量
+
+```Nginx
+http {
+    geoip_country /usr/share/GeoIP/GeoIP.dat;
+
+    vhost_traffic_status_zone;
+    vhost_traffic_status_filter_by_set_key $geoip_country_code country::*;
+
+    ...
+
+    server {
+
+        ...
+
+        vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;
+
+        location /status {
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+        }
+    }
+}
+```
+
+*   计算总服务器组（server groups）的各个国家/地区的流量。
+*   计算每个服务器组（server groups）的各个国家/地区的流量。
+
+基本上，国旗图像是HTML内置的。  
+如果`country`字符串包含在`vhost_traffic_status_filter_by_set_key`指令的第二个参数group name中，则启用国家标志图像。
+
+#### 单个存储容量（storage-volume）的流量计算
+
+```Nginx
+http {
+    vhost_traffic_status_zone;
+
+    ...
+
+    server {
+
+        ...
+
+        location ~ ^/storage/(.+)/.*$ {
+            set $volume $1;
+            vhost_traffic_status_filter_by_set_key $volume storage::$server_name;
+        }
+
+        location /status {
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+        }
+    }
+}
+```
+
+*   计算与location指令正则表达式匹配的单个存储容量的流量。
+
+#### 计算单个用户代理（user-agent）的流量
+
+```Nginx
+http {
+    vhost_traffic_status_zone;
+
+    map $http_user_agent $filter_user_agent {
+        default 'unknown';
+        ~iPhone ios;
+        ~Android android;
+        ~(MSIE|Mozilla) windows;
+    }
+
+    vhost_traffic_status_filter_by_set_key $filter_user_agent agent::*;
+
+    ...
+
+    server {
+
+        ...
+
+        vhost_traffic_status_filter_by_set_key $filter_user_agent agent::$server_name;
+
+        location /status {
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+        }
+    }
+}
+```
+
+*   单个`http_user_agent`的流量计算
+
+#### 为详细的http状态代码计算流量
+
+```Nginx
+http {
+    vhost_traffic_status_zone;
+
+    server {
+
+        ...
+
+        vhost_traffic_status_filter_by_set_key $status $server_name;
+
+        location /status {
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+        }
+    }
+}
+```
+
+*   按照详细的`http status code`计算流量
+
+`注意：`变量[$status](http://nginx.org/en/docs/http/ngx_http_core_module.html#variables) 在nginx-(1.3.2, 1.2.2)中可用。
+
+#### 动态dns的流量计算
+
+如果域有多个DNS A记录，则可以使用过滤功能或`proxy_pass`中的变量计算域的各个ip的流量。
+
+```Nginx
+http {
+    vhost_traffic_status_zone;
+
+    upstream backend {
+        elb.example.org:80;
+    }
+
+    ...
+
+    server {
+
+        ...
+
+        location /backend {
+            vhost_traffic_status_filter_by_set_key $upstream_addr upstream::backend;
+            proxy_pass backend;
+        }
+    }
+}
+```
+
+*   计算域`elb.example.org`的各个IP的流量。  
+    如果`elb.example.org`有多个DNS A记录，将在filterZones中的显示所有ip。  
+    在上述设置中，NGINX启动或重新加载配置时，它会查询DNS服务器来解析域并将DNS A记录缓存在内存中。  
+    当DNS管理员更改了DNS A记录时内存中的对应记录并不会更新，除非NGINX 重新启动（restart）或重新加载（reload）。
+
+```Nginx
+http {
+    vhost_traffic_status_zone;
+
+    resolver 10.10.10.53 valid=10s
+
+    ...
+
+    server {
+
+        ...
+
+        location /backend {
+            set $backend_server elb.example.org;
+            proxy_pass http://$backend_server;
+        }
+    }
+}
+```
+
+*   计算域`elb.example.org`的各个IP的流量。  
+    如果`elb.example.org`的DNS A记录被更改，则`::nogroups`中将同时显示旧IP和新IP。  
+    与第一个上游组（upstream grou）设置不同，即使DNS管理员更改了DNS A记录，第二个设置也能正常工作。
+
+`注意：` 更多有关NGINX DNS的详细信息请参阅[dns-service-discovery-nginx-plus](https://www.nginx.com/blog/dns-service-discovery-nginx-plus) 。
+
+#### 排除状态页的流量计算
+
+```Nginx
+http {
+    vhost_traffic_status_zone;
+
+    ...
+
+    server {
+
+        ...
+
+        location /status {
+            vhost_traffic_status_bypass_limit on;
+            vhost_traffic_status_bypass_stats on;
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+        }
+    }
+}
+```
+
+*   从状态流量计算和限制功能中排除`/status`uri。  
+    请参阅以下指令：See the following directives:
+    *   [vhost\_traffic\_status\_bypass\_limit](https://blog.csdn.net/tobrainto/article/nginx-module-vts-all/#vhost_traffic_status_bypass_limit)
+    *   [vhost\_traffic\_status\_bypass\_stats](https://blog.csdn.net/tobrainto/article/nginx-module-vts-all/#vhost_traffic_status_bypass_stats)
+
+#### 永久维护统计数据
+
+```Nginx
+http {
+    vhost_traffic_status_zone;
+    vhost_traffic_status_dump /var/log/nginx/vts.db;
+
+    ...
+
+    server {
+
+        ...
+
+    }
+}
+```
+
+*   使用`vhost_traffic_status_dump`指令可以永久地维护统计数据，即使系统已经重新启动或nginx已经重新启动。  
+    有关详细用法，请参见 [vhost\_traffic\_status\_dump](https://blog.csdn.net/tobrainto/article/nginx-module-vts-all/#vhost_traffic_status_dump) 。
+
+### 15、自定义
+
+#### 安装模块后进行自定义
+
+1.  您需要将`{{uri}}`字符串更改为`status.template.html`中的状态uri，如下所示：
+
+```plain
+shell> vi share/status.template.html
+```
+
+```plain
+var vtsStatusURI = "yourStatusUri/format/json", vtsUpdateInterval = 1000;
+```
+
+2.  然后，自定义`status.template.html`并将其复制到服务器（server）根目录，如下所示：
+
+```plain
+shell> cp share/status.template.html /usr/share/nginx/html/status.html
+```
+
+3.  配置 `nginx.conf`
+
+```Nginx
+   server {
+       server_name example.org;
+       root /usr/share/nginx/html;
+
+       # Redirect requests for / to /status.html
+       location = / {
+           return 301 /status.html;
+       }
+
+       location = /status.html {}
+
+       # Everything beginning /status (except for /status.html) is
+       # processed by the status handler
+       location /status {
+           vhost_traffic_status_display;
+           vhost_traffic_status_display_format json;
+       }
+   }
+```
+
+4.  访问 html
+
+```plain
+http://example.org/status.html
+```
+
+#### 在安装模块之前进行自定义
+
+1.  修改`share/status.template.html`（不要更改`{{uri}}`字符串）
+2.  重新创建`ngx_http_vhost_traffic_status_module_html.h`， 如下所示:
+
+```plain
+shell> cd util
+shell> ./tplToDefine.sh ../share/status.template.html > ../src/ngx_http_vhost_traffic_status_module_html.h
+```
+
+3.  通过添加`--add-module=/path/to/nginx-module-vts`，将模块添加到构建配置中。
+    
+4.  构建nginx二进制文件。
+    
+5.  安装nginx二进制文件。

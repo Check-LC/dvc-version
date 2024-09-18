@@ -1,0 +1,53 @@
+## 外部数据库
+### 配置
+
+#### 用户
+mysql 8.0 新建用户并指定来源机器（测试机所在网段/ 具体的 k8s 节点机器）
+```
+CREATE USER 'nightingale'@'10.8.0.%' IDENTIFIED BY 'Inboc@2020';
+```
+
+#### 数据库创建
+```
+set names utf8mb4;
+
+drop database if exists n9e_v6;
+create database n9e_v6;
+```
+
+#### 数据库恢复
+
+```bash
+# 将之前的实例导出的n9e_v6 的数据库进行恢复（测试的正常--可登录有规则和用户、生产的不正常）
+# eg 备份
+mysqldump -u username -p mydatabase > /path/to/mydatabase.sql
+# 恢复
+
+mysql -u username -p mydatabase < /path/to/mydatabase.sql
+```
+
+#### 授权权限
+
+（官方讲只需要连接和写入，当前给予 `数据库用户` 的权限如下；暂无异常）
+
+```
+show grants for 'nightingale'@'10.8.0.%';
++--------------------------------------------------------------------------------+
+| Grants for nightingale@10.8.0.%                                                |
++--------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `nightingale`@`10.8.0.%`                                 |
+| GRANT SELECT, INSERT, UPDATE, DELETE ON `n9e_v6`.* TO `nightingale`@`10.8.0.%` |
++--------------------------------------------------------------------------------+
+```
+
+#### helm 安装
+
+连接 external database；可以正常使用 nightiingale；但是 oidc 或许需要重新测试确认，是否需要更新。
+
+## 验证迁移过程
+1. 外部数据库 \
+	1.1 创建数据库之后执行官方 [init](https://github.com/ccfos/nightingale/blob/main/docker/initsql/a-n9e.sql) ，成功连接可以正常启动应用。\
+	1.2 向外部数据库导入生产中 mysqldump 备份的 sql 文件到数据库中，users 表不存在任何内容。 
+2. 内部数据库 \
+	2.1 mysql 使用 8.0 正常；5.7 不能正常运行应用。\
+	2.2 此次测试应用中，添加的用户和规则被导出并备份恢复到外部数据库，应用连接外部数据库，显示规则和用户正常存在。

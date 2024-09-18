@@ -1,0 +1,39 @@
+variable "groups_info" {
+  description = "Map of groups info"
+  type = object({
+    level1 = map(object({
+    }))
+    level2 = map(object({
+      parent = string
+    }))
+    level3 = map(object({
+      parent = string
+    }))
+    level4 = map(object({
+      parent = string
+    }))
+    level5 = map(object({
+      parent = string
+    }))
+  })
+  default = ({
+    level1 = {}
+    level2 = {}
+    level3 = {}
+    level4 = {}
+    level5 = {}
+  })
+}
+
+variable "users_info" {
+  description = "Map of users and their groups"
+  type = map(object({
+    name = string
+    password = string
+    email = string
+    groups = list(string)
+    type = string
+    is_active = bool
+  }))
+  default = {}
+}

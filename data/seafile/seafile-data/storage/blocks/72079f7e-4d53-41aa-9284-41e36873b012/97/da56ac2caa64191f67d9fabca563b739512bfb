@@ -1,0 +1,38 @@
+官方地址，eg：
+- gitlab [jsonnet 维护配置](https://gitlab.com/gitlab-com/runbooks/-/tree/master/reference-architectures/get-hybrid/src) (用于 dashboard、rules); [仓库总体自述](https://gitlab.com/gitlab-org/grafana-dashboards)在此处
+- gitlab grafana dashboard Mixins 文件内容 [地址](https://gitlab.com/gitlab-com/runbooks/-/tree/master/reference-architectures/get-hybrid)
+- vault jsonnet [配置](https://github.com/giantswarm/vault-exporter/tree/master?tab=readme-ov-file#dashboards-and-alerts) (配置使用生成目标文件还未研究)
+
+## dashboard 来源
+
+### 1. grafana社区dashboard
+
+地址在[此处](https://grafana.com/grafana/dashboards/)([https://grafana.com/grafana/dashboards/](https://grafana.com/grafana/dashboards/))，前往使用关键字查询并引入
+
+### 2. 各应用官方的 Monitoring Mixins
+
+— mixin dashboard 可以代码自定义，管理比较方便，某些官方也使用这样的标准，便于管理，节省制作时间
+
+eg：
+
+- gitlab [jsonnet 维护配置](https://gitlab.com/gitlab-com/runbooks/-/tree/master/reference-architectures/get-hybrid/src) (用于dashboard、rules); [仓库总体自述](https://gitlab.com/gitlab-org/grafana-dashboards)在此处
+    
+
+- gitlab grafana dashboard Mixins 文件内容[地址](https://gitlab.com/gitlab-com/runbooks/-/tree/master/reference-architectures/get-hybrid)
+    
+- vault jsonnet [配置](https://github.com/giantswarm/vault-exporter/tree/master?tab=readme-ov-file#dashboards-and-alerts) (配置使用生成目标文件还未研究)
+    
+- [grafana/jsonnet-libs: Grafana Labs' Jsonnet libraries (github.com)](https://github.com/grafana/jsonnet-libs)
+    
+- [grafana/grafonnet: Jsonnet library for generating Grafana dashboards. (github.com)](https://github.com/grafana/grafonnet)
+    
+- [grafana/grafonnet-lib: Jsonnet library for generating Grafana dashboard files. (github.com)](https://github.com/grafana/grafonnet-lib) (🐾已弃用, 但是仍有很多 Dashboard 资源依赖它)
+    
+- [Prometheus Monitoring Mixins | Monitoring Mixins](https://monitoring.mixins.dev/)
+    
+- [kubernetes-monitoring/kubernetes-mixin: A set of Grafana dashboards and Prometheus alerts for Kubernetes. (github.com)](https://github.com/kubernetes-monitoring/kubernetes-mixin)
+    
+
+## 3. reference
+
+一篇详细讲解的文章：[https://www.cnblogs.com/east4ming/p/17489659.html](https://www.cnblogs.com/east4ming/p/17489659.html)

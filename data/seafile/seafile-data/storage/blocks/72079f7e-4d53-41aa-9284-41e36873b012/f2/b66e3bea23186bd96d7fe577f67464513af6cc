@@ -1,0 +1,413 @@
+
+
+# Ingress：URL重写与高级玩法
+
+**什么是URL重写**
+
+URL重写（URL rewriting）是一种在Web[服务器](https://cloud.tencent.com/act/pro/promotion-cvm?from_column=20065&from=20065)上修改或转换请求URL的过程。它通常涉及使用服务器配置或规则来更改传入的URL，以便在不改变实际请求资源的情况下，实现不同的行为，如重定向、路径映射、参数处理等。URL重写在服务器层面进行，因此客户端（如浏览器）对于URL的请求不会感知到这些更改，但服务器会根据配置进行适当的处理。URL重写可以用于多种目的，例如：
+
+1.  重定向: 将一个URL重写为另一个URL，实现301永久重定向或302临时重定向。这可以用于更改站点结构、修复错误的URL、实现SEO优化等。
+2.  路径映射: 将一个URL的路径映射到另一个位置，这对于隐藏实际文件路径或路径重组很有用。
+3.  查询参数处理: 在URL中添加、删除或修改查询参数，以适应不同的应用需求。
+4.  动态URL到静态URL: 将动态生成的URL（带有参数）转化为静态URL，更友好且易于索引。
+5.  隐藏技术细节: 可以通过URL重写隐藏后端服务器或应用程序的实际技术细节，提高安全性。
+
+在Nginx、Apache等常见的Web服务器中，URL重写可以通过正则表达式、规则匹配等方式来实现。具体的语法和方法会因服务器软件的不同而有所不同。通常，服务器配置文件中会有专门的部分用于配置URL重写规则，例如在Nginx中是使用rewrite指令。URL重写是一种强大的技术，但在使用时需要小心，确保配置正确以避免潜在的问题，例如无限循环重定向或错误的重写规则可能导致网站不可用。
+
+### **Ingress 内置变量**
+
+内置预定义变量即无需声明就可以使用的变量，通常包括一个http请求或响应中一部分内容的值，以下为一些常用的内置预定义变量：
+
+```javascript
+变量名 定义
+$arg_PARAMETER  GET请求中变量名PARAMETER参数的值。
+$args   这个变量等于GET请求中的参数。例如，foo=123&bar=blahblah;这个变量只可以被修改
+$binary_remote_addr 二进制码形式的客户端地址。
+$body_bytes_sent    传送页面的字节数
+$content_length 请求头中的Content-length字段。
+$content_type   请求头中的Content-Type字段。
+$cookie_COOKIE  cookie COOKIE的值。
+$document_root  当前请求在root指令中指定的值。
+$document_uri   与$uri相同。
+$host   请求中的主机头(Host)字段，如果请求中的主机头不可用或者空，则为处理请求的server名称(处理请求的server的server_name指令的值)。值为小写，不包含端口。
+$hostname   机器名使用 gethostname系统调用的值
+$http_HEADER    HTTP请求头中的内容，HEADER为HTTP请求中的内容转为小写，-变为_(破折号变为下划线)，例如：$http_user_agent(Uaer-Agent的值);
+$http_user_agent ： 客户端agent信息;
+$http_cookie ： 客户端cookie信息;
+$sent_http_HEADER   HTTP响应头中的内容，HEADER为HTTP响应中的内容转为小写，-变为_(破折号变为下划线)，例如： $sent_http_cache_control, $sent_http_content_type…;
+$is_args    如果$args设置，值为"?"，否则为""。
+$limit_rate 这个变量可以限制连接速率。
+$nginx_version  当前运行的nginx版本号。
+$query_string   与$args相同。
+$remote_addr    客户端的IP地址。
+$remote_port    客户端的端口。
+$remote_user    已经经过Auth Basic Module验证的用户名。
+$request_filename   当前连接请求的文件路径，由root或alias指令与URI请求生成。
+$request_body   这个变量（0.7.58+）包含请求的主要信息。在使用proxy_pass或fastcgi_pass指令的location中比较有意义。
+$request_body_file  客户端请求主体信息的临时文件名。
+$request_completion 如果请求成功，设为"OK"；如果请求未完成或者不是一系列请求中最后一部分则设为空。
+$request_method 这个变量是客户端请求的动作，通常为GET或POST。包括0.8.20及之前的版本中，这个变量总为main request中的动作，如果当前请求是一个子请求，并不使用这个当前请求的动作。
+$request_uri    这个变量等于包含一些客户端请求参数的原始URI，它无法修改，请查看$uri更改或重写URI,
+包含请求参数的原始URI，不包含主机名，如：”/foo/bar.php?arg=baz”。
+$scheme 所用的协议，比如http或者是https，比如rewrite ^(.+)$ $scheme://example.com$1 redirect;
+$server_addr    服务器地址，在完成一次系统调用后可以确定这个值，如果要绕开系统调用，则必须在listen中指定地址并且使用bind参数。
+$server_name    服务器名称。
+$server_port    请求到达服务器的端口号。
+$server_protocol    请求使用的协议，通常是HTTP/1.0或HTTP/1.1。
+$uri    请求中的当前URI(不带请求参数，参数位于args)，不同于浏览器传递的args)，不同于浏览器传递的args)，不同于浏览器传递的request_uri的值，它可以通过内部重定向，或者使用index指令进行修改。uri不包含主机名，如”/foo/bar.html”。
+```
+
+### **Ingress 正则表达式**
+
+```javascript
+正则表达式匹配，其中：
+~       为区分大小写匹配
+~*      为不区分大小写匹配
+!~和!~*  分别为区分大小写不匹配及不区分大小写不匹配
+.      匹配除换行符以外的任意字符
+\w     匹配字母或数字或下划线或汉字
+\s     匹配任意的空白符
+\d     匹配数字
+\b     匹配单词的开始或结束
+^      匹配字符串的开始
+$      匹配字符串的结束
+*         重复零次或更多次
++         重复一次或更多次
+?         重复零次或一次
+{n}       重复n次
+{n,}      重复n次或更多次
+{n,m}     重复n到m次
+*?        复任意次，但尽可能少重复
++?        重复1次或更多次，但尽可能少重复
+??        重复0次或1次，但尽可能少重复
+{n,m}?    重复n到m次，但尽可能少重复
+{n,}?     重复n次以上，但尽可能少重复
+\W        匹配任意不是字母，数字，下划线，汉字的字符
+\S        匹配任意不是空白符的字符
+\D        匹配任意非数字的字符
+\B        匹配不是单词开头或结束的位置
+[^x]      匹配除了x以外的任意字符
+[^aeiou]  匹配除了aeiou这几个字母以外的任意字符   
+(exp)         匹配exp,并捕获文本到自动命名的组里
+(?<name>exp)  匹配exp,并捕获文本到名称为name的组里，也可以写成(?'name'exp)
+(?:exp)       匹配exp,不捕获匹配的文本，也不给此分组分配组号   
+(?=exp)       匹配exp前面的位置
+(?<=exp)      匹配exp后面的位置
+(?!exp)       匹配后面跟的不是exp的位置
+(?<!exp)      匹配前面不是exp的位置
+(?#comment)   注释分组不对正则表达式的处理产生任何影响
+```
+
+### **配置URL重写规则**
+
+在某些应用场景中，后端服务提供的URL与Ingress规则中执行的路径不同，而Ingress访将访问路径直接转发到后端相同路径，如果不配置URL重写规则，所有访问都将返回404。比如如下案例，Ingress规则中配置的是/user/info，而后端服务提供的访问路径是/info,在不配置重写的情况下，会直接转发给后端/user/info与实际提供的访问路径/info不匹配，会直接返回404。接下来咱们用案例的方式进行验证。
+
+不配置URL重写直接转发：
+
+```javascript
+$ cat ingress.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo
+spec:
+  rules:
+  - host: demo.kubesre.com
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: demo-svc
+            port:
+              number: 8080
+  ingressClassName: nginx
+
+$ kubectl apply -f ingress.yml
+ingress.networking.k8s.io/demo configured
+```
+
+访问验证(/user/info)：
+
+```javascript
+# 访问/user/info，可以看出直接返回404
+$ curl http://demo.kubesre.com/user/info
+404 page not found
+```
+
+配置URL重写：
+
+```javascript
+$  cat ingress.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - host: demo.kubesre.com
+    http:
+      paths:
+      - path: /user(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: demo-svc
+            port:
+              number: 8080
+  ingressClassName: nginx
+
+$ kubectl apply -f ingress.yml
+ingress.networking.k8s.io/demo configured
+```
+
+访问验证(/user/info)：
+
+```javascript
+# 访问/user/info，可以看出直接正常返回了
+$ curl  http://demo.kubesre.com/user/info
+{"message":"云原生运维圈！"}
+```
+
+注解说明：
+
+以上案例Ingress重写是通过`nginx.ingress.kubernetes.io/rewrite-target`注解实现不同路径的重写规则。占位符$2表示将第二个括号即(.\*)中匹配到的所有字符填写到`nginx.ingress.kubernetes.io/rewrite-target`注解中。想必大家都知道Ingress是基于Nginx开发的，此时是通过Ingress CRD进行创建的重写配置，其本质也是修改Nginx配置文件的，此时从Ingress里的Nginx拷贝出来的配置如下：
+
+```javascript
+ server {
+  server_name demo.kubesre.com ;
+
+  listen 80  ;
+  listen [::]:80  ;
+  listen 443  ssl http2 ;
+  listen [::]:443  ssl http2 ;
+
+  set $proxy_upstream_name "-";
+
+  ssl_certificate_by_lua_block {
+   certificate.call()
+  }
+
+  location ~* "^/user(/|$)(.*)" {
+
+   set $namespace      "default";
+   rewrite "(?i)/user(/|$)(.*)" /$2 break;
+   proxy_pass http://upstream_balancer;
+
+   proxy_redirect     off;
+   }
+```
+
+### **高级URL重写规则**
+
+对于一些复杂的重写规则需求，可以通过如下注解来实现，其本质也是修改Nginx配置文件。
+
+*   nginx.ingress.kubernetes.io/server-snippet：在nginx.conf的“server”字段中添加自定义配置。
+*   nginx.ingress.kubernetes.io/configuration-snippet：在nginx.conf的“location”字段中添加自定义配置。
+
+URL重写Flag参数：
+
+*   last：表示本条规则匹配完成后继续向下匹配。
+*   break：表示本条规则匹配完成后停止匹配。
+*   redirect：表示临时重定向，返回状态码302。
+*   permanent：表示永久重定向，返回状态码301。
+
+重定向就是将网页自动转向重定向：
+
+*   301永久性重定向：新网址完全继承旧网址，旧网址的SEO网络搜索引擎的排名等完全清零
+*   301重定向是网页更改地址后对搜索引擎友好的最好方法，只要不是暂时搬移的情况，都建议使用301来做转址。
+*   302临时性重定向：对旧网址没有影响，但新网址不会有排名
+*   搜索引擎爬虫会抓取新的内容而保留旧的网址
+
+配置Location：
+
+通过Ingress注解`nginx.ingress.kubernetes.io/server-snippet`配置location，访问/sre，返回401错误代码，案例如下：
+
+```javascript
+$ cat sre.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/server-snippet: |
+       location /sre {
+        return 401;
+        }
+  name: demo-redirect
+spec:
+  rules:
+  - host: demo.kubesre.com
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: demo-svc
+            port:
+              number: 8080
+  ingressClassName: nginx
+
+$ kubectl apply -f 1.yml
+ingress.networking.k8s.io/demo-redirect configured
+```
+
+访问验证：
+
+```javascript
+# 表示验证成功
+$ curl http://demo.kubesre.com/sre/
+<html>
+<head><title>401 Authorization Required</title></head>
+<body>
+<center><h1>401 Authorization Required</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+```
+
+URL重定向（permanent）：
+
+```javascript
+cat  demo-permanent.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      rewrite ^/$ https://www.baidu.com redirect;
+  name: demo-redirect
+spec:
+  rules:
+  - host: demo.kubesre.com
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: demo-svc
+            port:
+              number: 8080
+  ingressClassName: nginx
+
+$ kubectl apply -f demo-permanent.yml
+ingress.networking.k8s.io/demo-permanent created
+```
+
+访问验证：
+
+```javascript
+# 301永久重定向，浏览器器地址栏会显示跳转后的URL地址,真实效果可以通过浏览器访问测试验证
+$ curl http://demo.kubesre.com
+<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+```
+
+URL重定向（redirect）：
+
+通过URL重定向，访问/test/info,直接重定向302跳转到/user/info。
+
+```javascript
+$ cat demo-redirect.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+       rewrite ^/test/(.*)$ /user/$1 redirect;
+  name: demo-redirect
+spec:
+  rules:
+  - host: demo.kubesre.com
+    http:
+      paths:
+      - path: /test
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: demo-svc
+            port:
+              number: 8080
+  ingressClassName: nginx
+  
+$ kubectl apply -f demo-redirect.yml
+ingress.networking.k8s.io/demo-redirect created
+```
+
+访问验证：
+
+```javascript
+# 302 说明已经重定向了，实际效果可以通过浏览器访问查看
+$ curl  http://demo.kubesre.com/test/info
+<html>
+<head><title>302 Found</title></head>
+<body>
+<center><h1>302 Found</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+```
+
+URL重写（last）：
+
+通过URL重写实现，访问/sre,返回的是/kube的结果，可以利用重写Flag last参数，当URL重写后，会发送一个新的请求，再次进入server块，重试location匹配，匹配成功直接把结果直接返回。
+
+```javascript
+$ cat sre.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      rewrite ^/sre /kube last;
+    nginx.ingress.kubernetes.io/server-snippet: |
+       location /sre {
+        return 401;
+        }
+        location /kube {
+        return 403;
+        }
+  name: demo-redirect
+spec:
+  rules:
+  - host: demo.kubesre.com
+    http:
+      paths:
+      - path: /sre
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: demo-svc
+            port:
+              number: 8080
+  ingressClassName: nginx
+
+$ kubectl apply -f sre.yml
+ingress.networking.k8s.io/demo-redirect configured
+```
+
+访问验证：
+
+```javascript
+# 访问/sre，则返回/kube结果403
+$ curl http://demo.kubesre.com/sre/
+<html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+<hr><center>nginx</center>
+</body>
+```
+
+### **总结**
+
+本文介绍了URL重写的概念，并通过实际案例的方式讲解了URL重写的方方面面，下一章将讲解Ingress更多企业级实战，请敬请期待！

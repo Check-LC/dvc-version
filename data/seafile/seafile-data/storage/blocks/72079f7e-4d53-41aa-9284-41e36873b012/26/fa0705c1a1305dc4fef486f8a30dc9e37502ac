@@ -1,0 +1,32 @@
+
+
+# harbor - inboc
+
+harbor
+
+[Xie Jian 已更新 大约 4 小时前](https://outline.inboc.net/doc/harbor-NxAUizfscx/history)  • [被浏览 2 用户](https://outline.inboc.net/doc/harbor-NxAUizfscx/insights)
+
+1、使用以下参数创建 OAuth2/OpenID Provider：
+
+*   Client Type: `Confidential`
+    
+*   Redirect URIs: `https://harbor.company/c/oidc/callback`
+    
+*   Scopes: OpenID, Email and Profile
+    
+*   Signing Key: Select any available key
+    
+
+![](assets/1713432722-7b1144013bc9d914980407419187d0e4.png)
+
+2、使用上面的Provider创建Application
+
+![](assets/1713432722-b472ce7d19a7284db303dd713ff010f4.png)
+
+Harbor的配置如下:
+
+![](assets/1713432722-799199398c6ca2011cae1cbc43169c1e.png)
+
+[反向链接](#backlinks)
+
+[7\. 项目配置](https://outline.inboc.net/doc/7-Y6TGY95RO9#d-NxAUizfscx)

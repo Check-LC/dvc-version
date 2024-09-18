@@ -1,0 +1,12 @@
+
+知识库文件命名规范
+
+```ini
+00_FolderName
+  00_01_SubFolderName
+    1.filename.md
+    2.
+  00_02_SubFolderNamee
+01_FolderNamee
+```
+

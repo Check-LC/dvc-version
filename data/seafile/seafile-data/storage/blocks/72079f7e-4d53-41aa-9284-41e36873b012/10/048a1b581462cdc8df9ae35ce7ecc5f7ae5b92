@@ -1,0 +1,217 @@
+[PromCat.io - A resource catalog for enterprise-class Prometheus monitoring](https://promcat.io/)  
+
+[Awesome Prometheus alerts | Collection of alerting rules](https://samber.github.io/awesome-prometheus-alerts/rules.html)
+
+## 原则
+
+### 告警规则标签
+1. cluster:  inboc | ibswufe
+2. severity:  critical | warning | notice（宕机或可能宕机或影响面广大、影响性能、有突变或不正常行为出现）
+3. platform:  bare-metal | vitrual-machine | container
+4. name--service name:  xx    
+        --container name:  xx
+
+### 规则执行查询频率：
+   去查询后端存储的间隔时间
+   30s
+### 告警标准判断时长：
+   即持续时长，一般大于执行频率，在这个持续时长内按照执行频率多次执行查询，每次都触发才生成告警
+   critical----60s
+   warning、notice----300s
+
+## 问题 ：
+  1. 应该重点关注的指标或许不太完善
+  2. 阈值设置是否合理
+  3. 当前告警规则主要集中在关注是否资源是否足够，之后根据必要增加关注是否有资源浪费的情况
+  4. 告警收敛是否科学
+  
+## 规则
+### vsphere
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | ---- | ---- |
+| 1 | ESXi 实例 CPU 使用率大于 80% | `( sum by (host_name) (vmware_host_cpu_usage{}) / sum (vmware_host_cpu_max) by(host_name) ) > 0.8` | warning |
+| 2 | ESXi 实例内存使用率大于80% | `( sum (vmware_host_memory_usage) by(host_name) / sum(vmware_host_memory_max) by(host_name) ) > 0.8` | warning |
+| 3 | Virtual Machine CPU 使用率大于 80% | `( 1 - sum (increase(node_cpu_seconds_total{mode="idle"}[5m]) ) by(instance) / sum (increase(node_cpu_seconds_total{}[5m]) ) by(instance) )  > 0.8` | warning |
+| 4 | Virtual Machine 内存使用率大于 80% | `(sum (node_memory_MemTotal_bytes{}) by(instance) -sum (node_memory_MemAvailable_bytes{}) by ( instance ) ) / sum (node_memory_MemTotal_bytes{}) by(instance) >  0.8` | warning |
+| 5 | 宿主机硬盘容量空闲率小于 20% | `( sum (vmware_datastore_freespace_size) by(ds_name) / sum(vmware_datastore_capacity_size) by(ds_name) )  < 0.2` | critical |
+
+### Node -exporter / vm
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 某个磁盘无法正常读取/写入。 | `(node_filesystem_device_error{mountpoint!~"/var/lib/.*",mountpoint!~"/run.*"}) >0` | critical |
+| 2 | 文件系统占用率高于 0.8 | `(1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) > 0.8` | warning |
+| 3 | cpu 负载高于 0.8 | `(sum by (instance) (avg by (mode, instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m]))) > 0.8) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}` | warning |
+| 4 | 文件描述符/文件句柄不足 | `(node_filefd_allocated{}/node_filefd_maximum{}) > 0.9` | warning |
+| 5 | 索引节点资源不足 | `(100 - ((node_filesystem_files_free * 100) / node_filesystem_files)) > 90` | warning |
+| 6 | 虚拟机内存资源不足 | `(node_memory_MemTotal_bytes - node_memory_MemFree_bytes - (node_memory_Cached_bytes + node_memory_Buffers_bytes))/node_memory_MemTotal_bytes > 0.8 ` | critical 是否需要增加一个 warning 等级 |
+| 7 | 网络入站丢包 | `rate(node_network_receive_drop_total{device=~"e.*"}[1m]) > 3 ` | warning |
+| 8 | 网络出站丢包 | `rate(node_network_transmit_drop_total{device=~"e.*"}[1m]) > 3 ` | warning |
+|  |  |  |  |
+
+### Process 
+重要进程告警
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 进程文件打开数量太多 | `avg by (instance,groupname) (namedprocess_namegroup_worst_fd_ratio{}) > 0.8 ` | warning |
+| 2 | 进程停止 | `avg by (instance,groupname) (namedprocess_namegroup_num_procs{groupname="chronyd"}) == 0` | critical |
+| 3 | 有进程 1分钟前已经重启 | `namedprocess_namegroup_oldest_start_time_seconds{} > time() - 60 ` | info |
+
+### Redis
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 客户端连接比例过高 | `(redis_connected_clients / redis_config_maxclients) > 0.80` | warning |
+| 2 | 服务宕机 | ` redis_up ==0 ` | critical |
+| 3 | 集群主节点数量变化 | `rate(redis_instance_info{role="master"}[5m]) != 0` | critical |
+| 4 | 集群没有主节点 | `(count(redis_instance_info) by(cluster) or vector(0)) < 1` | critical |
+| 5 | 从节点数量变化情况（小于零即减少了） | `delta(redis_connected_slaves[1m]) <0 ` | critical |
+| 6 | redis 连接被拒绝 | `sum( increase(redis_rejected_connections_total[1m]) )  by(cluster) > 0` | critical |
+| 7 |  |  |  |
+|  |  |  |  |
+
+### PostgreSQL
+当前 exporter 未成功运行，运行后从 awesome 项目中选取测试
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 服务宕机 | ` pg_up == 0 ` | critical |
+| 2 |  |  |  |
+| 3 |  |  |  |
+| 4 |  |  |  |
+
+### MySQL
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | MySQL 实例停止服务 | `mysql_up == 0` | critical |
+| 2 | MySQL 连接过多 | `max_over_time(mysql_global_status_threads_connected[1m]) / mysql_global_variables_max_connections  > 0.8` | warning |
+| 3 | 线程运行过多 | `max_over_time(mysql_global_status_threads_running[1m]) / mysql_global_variables_max_connections > 0.8` | warning |
+| 4 | 慢查询增加 | `sum (increase(mysql_global_status_slow_queries[1m])) by(cluster) > 0` | warning |
+| 5 | innodb 引擎日志空间等待事件过多 | `rate(mysql_global_status_innodb_log_waits[5m]) > 10` | warning |
+| 6 | 服务重启 | `mysql_global_status_uptime < 60` | info |
+
+### Kafka
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 消费者组的延迟平均值过高 | `avg by (group_id) (kminion_kafka_consumer_group_topic_lag{}) > 50` | warning |
+| 2 | 控制器离线的分区数量 | `kafka_controller_kafkacontroller_offlinepartitionscount > 0` | critical |
+| 3 | 控制器活跃数不正常 | `kafka_controller_kafkacontroller_newactivecontrollerscount != 1 ` | critical |
+
+
+### Traefik
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 500 错误率较高 | `sum(rate(traefik_service_requests_total{code=~"5.*"}[3m])) by (service) / sum(rate(traefik_service_requests_total[3m])) by (service) > 0.03 ` | warning |
+| 2 | 400 错误率较高 | ` sum(rate(traefik_service_requests_total{code=~"4.*"}[3m])) by (service) / sum(rate(traefik_service_requests_total[3m])) by (service) > 0.03` | warning |
+| 2 |  |  |  |
+
+### Nexus
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | jvm 堆内存的使用过高 | `jvm_memory_heap_usage > 0.8 ` | warning |
+| 2 | 文件描述符使用量过高 | jvm_fd_usage > 0.8 | warning |
+
+### Gitlab -- sidekiq
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | sidekiq 队列任务数量较多 | `sidekiq_queue_size > 100` | warning |
+| 2 | sidekiq 调度延迟超过 1m | `sidekiq_queue_latency_seconds > 60 ` | warning |
+
+### MinIO
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 磁盘离线 | `minio_cluster_disk_offline_total > 0` | critical |
+| 2 | 节点离线 | `minio_cluster_nodes_offline_total > 0` | critical |
+| 3 | 磁盘存储空闲率较低 | `minio_node_disk_free_bytes / minio_node_disk_total_bytes < 0.2 ` | warning |
+|  |  |  |  |
+
+### CoreDNS
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | CoreDNS panic 出现 | `sum(increase(coredns_panics_total[1m])) by(cluster)  > 0 ` | critical |
+|  |  |  |  |
+
+### Harbor
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 服务存在组件宕机 | `harbor_up == 0`  | critical |
+| 2 |  |  |  |
+
+### Vault
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 服务解封状态 | `vault_core_unsealed == 0` | critical |
+| 2 | 活跃服务实例的比例< 1 | `sum(vault_core_active) / count(vault_core_active) <= 0.5` | critical |
+
+### Blackbox
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 网址探针失效 | `probe_success == 0` | critical |
+| 2 | 探针耗时 1s以上 | `avg_over_time(probe_duration_seconds[1m]) > 1` | warning |
+| 3 | HTTP 状态码不正常 | ` probe_http_status_code <= 199 OR probe_http_status_code >= 400` | critical |
+| 4 | HTTP 耗时 1s 以上 | `avg_over_time(probe_http_duration_seconds[1m]) > 1` | warning |
+|  |  |  |  |
+
+### Certmanager
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 存在证书 7天内到期 | `(min(certmanager_certificate_expiration_timestamp_seconds{ } > 0) - time()) / 86400 < 7` | warning |
+| 2 | ACME 客户端存在不正常请求 | `sum by (cluster,host) (rate(certmanager_http_acme_client_request_count{status!~"2.."}[5m]))  > 0 ` | warning |
+
+## Kubernetes
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 节点 unready | `kube_node_status_condition{condition="Ready",status="true"} == 0` | critical |
+| 2 | 节点内存告急 | `kube_node_status_condition{condition="MemoryPressure",status="true"} == 1` | critical |
+| 3 | 节点存储压力过大 | `kube_node_status_condition{condition="DiskPressure",status="true"} == 1 ` | critical |
+| 4 | 节点网络不可达 | `kube_node_status_condition{condition="NetworkUnavailable",status="true"} == 1` | critical |
+| 5 | 容器OOM | `(kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 10m >= 1) and ignoring (reason) min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[10m]) == 1` | warning |
+| 6 | 存在StatefulSet 服务停止 | `kube_statefulset_replicas != kube_statefulset_status_replicas_ready > 0` | critical |
+| 7 | Pod 调度错误率较高 | `sum by (cluster,result) (rate(scheduler_schedule_attempts_total{result!~"scheduled"}[10m])) / ignoring(result) group_left sum (rate(scheduler_schedule_attempts_total[10m])) by (cluster) > 0.1` | warning |
+| 8 | 存在不健康状态pod | sum by (cluster,namespace, pod) (kube_pod_status_phase{phase=~"Pending\|Unknown\|Failed"}) > 0 | critical |
+| 9 | API 服务错误率较高 | `sum(rate(apiserver_request_total{job="apiserver",code=~"^(?:5..)$"}[5m])) by(cluster) / sum(rate(apiserver_request_total{job="apiserver"}[5m])) by(cluster) > 0.03 ` | critical |
+| 10 | Pod 崩溃统计 | sum by(cluster,pod) (increase(kube_pod_container_status_restarts_total[5m])) > 1 | warning |
+
+### Etcd
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 集群节点为偶数 | `count(etcd_server_id) by(cluster) % 2 == 0` | critical |
+| 2 | 集群 leader 不存在 | `etcd_server_has_leader == 0` | critical |
+| 3 | 集群选举频繁 | `increase(etcd_server_leader_changes_seen_total[10m]) > 2` | warning |
+| 4 | GRPC 请求失败率较高 | `sum(rate(grpc_server_handled_total{grpc_code!="OK"}[5m])) BY (cluster,grpc_service, grpc_method) / sum(rate(grpc_server_handled_total[5m])) BY (cluster,grpc_service, grpc_method) > 0.03 ` <br> |  |
+| 5 |  |  |  |
+
+### Longhorn
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 存储实际使用量较高 | `sum by(cluster,exported_node,volume) (longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes) > 0.8` | warning |
+| 2 | 节点硬盘容量使用率较高 | `(longhorn_disk_usage_bytes / longhorn_disk_capacity_bytes) > 0.8 ` | warning |
+| 3 | 卷的健康受损 | `longhorn_volume_robustness == 2` | warning |
+| 4 | 卷属于故障状态 | `longhorn_volume_robustness == 3` | critical |
+| 5 | 节点下线 | `(avg(longhorn_node_count_total) by(cluster) or on() vector(0)) - (count(longhorn_node_status{condition="ready"} == 1) by(cluster) or on() vector(0)) > 0 ` | critical |
+
+### Nextcloud
+
+| 序号 | 作用 | 规则 | 紧急程度 |
+| :--: | :--: | :--: | :--: |
+| 1 | 服务停止 | nextcloud_up == 0 | critical |
+
+
+
+

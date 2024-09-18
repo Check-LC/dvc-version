@@ -1,0 +1,55 @@
+mysql  新建一个数据库名叫 ibex，可以让任何地址使用用户：root，密码：testword 连接。并且连接参数如下：
+charset=utf8mb4&parseTime=True&loc=Local&allowNativePasswords=true
+
+实现这个需求，应该在数据库中执行什么样的命令
+
+要实现您的需求，您需要执行以下步骤：
+
+1. **创建数据库**：
+   使用 `CREATE DATABASE` 语句创建一个名为 `ibex` 的数据库。
+
+2. **创建用户**：
+   使用 `CREATE USER` 语句创建一个用户名为 `root` ，密码为 `testword` 的用户。
+
+3. **授权**：
+   使用 `GRANT` 语句授予用户对数据库的所有权限，并允许从任何主机连接。
+
+4. **应用字符集和时区设置**：
+   使用 `ALTER DATABASE` 和 `SET GLOBAL` 语句设置数据库的字符集和时区。
+
+5. **修改用户默认角色以使用 allowNativePasswords**：
+   由于 `allowNativePasswords=true` 是针对 MySQL 5.7.6 及以前版本的，对于 MySQL 8.0 及以上版本，您需要将用户的认证插件设置为 `mysql_native_password` 。
+
+以下是具体的 MySQL 命令：
+
+```sql
+-- 创建数据库 'ibex'
+CREATE DATABASE IF NOT EXISTS ibex CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 创建用户 'root' 并设置密码为 'testword'
+CREATE USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'testword';
+
+-- 授予 'root' 用户对 'ibex' 数据库的所有权限
+GRANT ALL PRIVILEGES ON ibex.* TO 'root'@'%';
+
+-- 应用字符集设置
+ALTER DATABASE ibex CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 设置时区为 Local （您的服务器设置）
+SET GLOBAL time_zone = 'SYSTEM'; -- 或者指定具体的时区偏移量，如 '+00:00'
+
+-- 应用更改
+FLUSH PRIVILEGES;
+```
+
+请注意以下几点：
+
+- `IDENTIFIED WITH mysql_native_password BY 'testword'` 这一行是针对 MySQL 8.0及以上版本的，它指定了用户的认证方法。如果您使用的是 MySQL 5.7.6及以前版本，您不需要指定 `IDENTIFIED WITH` ，因为 `mysql_native_password` 是默认的认证插件。
+
+- `root` @'%' 表示允许从任何 IP 地址（ `%` 代表所有主机）使用该用户连接。出于安全考虑，通常不建议给 `root` 用户这样的权限，特别是在生产环境中。您可能希望创建一个具有限制权限的专用用户。
+
+- `FLUSH PRIVILEGES;` 命令用于重新加载授权表，使权限更改立即生效。
+
+- 请根据您的 MySQL 服务器版本和配置相应地调整上述命令。
+
+在执行这些命令之前，请确保您有足够的权限，并且已经以具有相应权限的用户身份登录到 MySQL 服务器。如果您在执行过程中遇到任何问题，请检查您的 MySQL 服务器文档或版本特定的语法和权限要求。
