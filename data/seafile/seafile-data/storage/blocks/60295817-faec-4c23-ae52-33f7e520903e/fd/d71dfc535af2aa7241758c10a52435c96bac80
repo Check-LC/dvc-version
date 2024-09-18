@@ -1,8 +1,0 @@
-variable "nodes" {
-  description = "nodes config"
-  type = list(object({
-    hosts = list(string)
-    roles = list(string)
-  }))
-  default = []
-}

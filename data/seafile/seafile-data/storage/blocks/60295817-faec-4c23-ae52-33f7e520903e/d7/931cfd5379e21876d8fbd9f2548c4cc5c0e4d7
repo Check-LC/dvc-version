@@ -1,6 +1,0 @@
-locals {
-  rancher2 = {
-    access_key = data.vault_kv_secret_v2.rancher_admin.data["access_key"]
-    secret_key = data.vault_kv_secret_v2.rancher_admin.data["secret_key"]
-  }
-}

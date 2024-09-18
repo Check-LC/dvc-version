@@ -1,2 +1,0 @@
-
-`kubectl delete pod gitlab-webservice-default-6966b797f9-9z9ds --grace-period=0 --force -n gitlab `

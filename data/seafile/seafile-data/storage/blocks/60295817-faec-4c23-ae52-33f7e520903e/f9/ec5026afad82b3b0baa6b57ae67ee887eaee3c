@@ -1,4 +1,0 @@
-output "role_template" {
-  sensitive = true
-  value     = rancher2_role_template.rancher_role_template
-}

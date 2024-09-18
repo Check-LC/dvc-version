@@ -1,5 +1,0 @@
-2024-09-18 21:21:25,963 [INFO] xmlschema:1266 include_schema Resource 'XMLSchema.xsd' is already loaded
-2024-09-18 21:21:26,671 [WARNING] django.request:241 log_response Not Found: /accounts/login/?next=/
-2024-09-18 21:21:28,391 [WARNING] django.request:241 log_response Not Found: /accounts/login/?next=/
-2024-09-18 21:21:29,363 [INFO] xmlschema:1266 include_schema Resource 'XMLSchema.xsd' is already loaded
-2024-09-18 21:21:30,140 [WARNING] django.request:241 log_response Not Found: /favicon.ico

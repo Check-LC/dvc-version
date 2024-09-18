@@ -1,9 +1,0 @@
-output "cluster_registration_token" {
-  sensitive = true
-  value     = rancher2_cluster_v2.custom_cluster.cluster_registration_token
-}
-
-output "cluster_v1_id" {
-  sensitive = true
-  value     = rancher2_cluster_v2.custom_cluster.cluster_v1_id
-}

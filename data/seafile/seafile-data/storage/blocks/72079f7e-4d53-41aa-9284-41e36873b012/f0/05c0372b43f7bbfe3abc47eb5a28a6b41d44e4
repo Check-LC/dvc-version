@@ -1,6 +1,0 @@
-1. HPA 依赖于 metrics-server 这类软件；必须要给 pod 做资源限制才可以。
-
-- 以下在 rancher 中开启 metrics-server 的方法：
-![01_基础使用](../02_Rancher/01_基础使用.md#0.%20rancher%20创建集群)
-
-2. 占位

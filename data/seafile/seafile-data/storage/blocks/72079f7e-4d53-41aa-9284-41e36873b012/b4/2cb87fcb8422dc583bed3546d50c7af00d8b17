@@ -1,8 +1,0 @@
-1. 指标暴露之后通过集群内的 prom 的服务自动发现，收集指标，kube-prometheus 作为物理 prom 的联邦配置之一
-2. gitlab-exporter 这个组件是默认开启的
-3. pg+redis 在 gitlab 的 chart 中安装，没有使用外部的，可以收集到数据
-4. minIO charts 没有指标可以得到暴露
-5. 见文件 project/helm/gitlab/values.yml
-6. 文章未整理
-   
-   [helm install gitlab](https://leonli.ltd/2024/03/12/gitlab-helm-chart%e5%8d%87%e7%ba%a7%e5%8f%8a%e9%83%a8%e7%bd%b2/)

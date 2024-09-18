@@ -1,5 +1,0 @@
-locals {
-  authentik = {
-    token = data.vault_kv_secret_v2.ibswufe_authentik.data["token"]
-  }
-}

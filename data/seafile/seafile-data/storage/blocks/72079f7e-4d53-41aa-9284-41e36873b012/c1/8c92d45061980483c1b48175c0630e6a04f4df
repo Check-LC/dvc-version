@@ -1,7 +1,0 @@
-1. 跳过联网
-   - 使用 `shift+F10（+fn）` 在这个路径执行这个文件，电脑自动重启，会发现底部多了一个“暂时跳过”的选项
-   - ![](attachments/Pasted%20image%2020240911154101.png)
-- 输入一个特殊邮箱跳过验证 `no@thankyou.com`
-  （未测试）
-2. KMS 激活系统
-   链接 [在此](https://github.com/netnr/kms)

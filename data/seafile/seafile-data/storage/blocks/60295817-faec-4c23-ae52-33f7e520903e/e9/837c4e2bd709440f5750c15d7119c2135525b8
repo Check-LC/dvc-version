@@ -1,8 +1,0 @@
-module "rke2_cluster_add_nodes" {
-  source                                  = "../../../modules/rancher/rke2_cluster_add_nodes"
-  cluster_v1_id                           = module.rke2_cluster_create.cluster_v1_id
-  cluster_registration_token_node_command = module.rke2_cluster_create.cluster_registration_token[0]["node_command"]
-  nodes                                   = var.nodes
-  ssh_password                            = local.ssh_password
-  ssh_user                                = local.ssh_user
-}

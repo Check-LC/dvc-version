@@ -1,9 +1,0 @@
-```
-prometheusScraping:
-  enabled: true
-  port: 9100
-```
-
-
-serviceMonitor 这部分是为了使用 prometheus operator 资源
-在开启 prometheusScraping 的基础上，prom 已经可以通过 endpoint 进行监控

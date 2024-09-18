@@ -1,4 +1,0 @@
-output "user" {
-  sensitive = false
-  value     = authentik_user.user
-}

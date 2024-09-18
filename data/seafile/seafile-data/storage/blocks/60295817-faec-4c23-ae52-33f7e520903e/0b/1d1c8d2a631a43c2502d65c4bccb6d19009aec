@@ -1,6 +1,0 @@
-module "project_namespace_role_binding" {
-  source = "../../../modules/rancher/project_namespace_role_binding"
-
-  cluster_v1_id = data.rancher2_cluster_v2.test_ops_k8s.cluster_v1_id
-  projects_info = var.projects_info
-}

@@ -1,9 +1,0 @@
-variable "cluster_name" {
-  description = "rke2 custom cluster name"
-  type        = string
-}
-
-variable "kubernetes_version" {
-  description = "rke2 custom cluster kubernetes version"
-  type        = string
-}
